@@ -1,5 +1,5 @@
-#include "../src/dlr2d.hpp"
-#include "../src/polarization.hpp"
+#include "../../src/dlr2d.hpp"
+#include "../../src/polarization.hpp"
 #include "cppdlr/dlr_imtime.hpp"
 #include <cppdlr/cppdlr.hpp>
 #include <fmt/format.h>
@@ -141,7 +141,7 @@ nda::vector<double> hubatom_driver(double beta, double u, double lambda,
                                    double eps, int niom_dense, int niomtst,
                                    int nbos_tst, bool reduced, bool compressbasis) {
 
-  auto path = "../../dlr2d_if_data/"; // Path for DLR 2D grid data
+  auto path = "../../../dlr2d_if_data/"; // Path for DLR 2D grid data
 
   // Read 2D DLR grid indices from file
   std::string filename;
