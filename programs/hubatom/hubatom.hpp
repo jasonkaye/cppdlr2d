@@ -28,11 +28,27 @@
  * \return Vector containing problem parameters and errors, for analysis and
  * plotting
  */
-
 nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
                                      double eps, int niomtst, int nbos_tst,
                                      bool reduced, bool compressbasis,
                                      int niom_dense = 0);
+
+/*!
+ * \brief Driver function for Hubbard atom example, singlet vertex only
+ *
+ * This function expands the singlet vertex of the Hubbard atom in the
+ * DLR, computes the singlet polarization, and measures their error.
+ *
+ * \param[in] beta          Inverse temperature
+ * \param[in] u             Hubbard interaction
+ * \param[in] lambda        DLR cutoff
+ * \param[in] eps           Error tolerance
+ * \param[in] niomtst       # Matsubara freqs per dim in test grid
+ * \param[in] nbos_tst      # bosonic Matsubara freqs in test grid for
+ * polarization
+ */
+void hubatom_lam_s(double beta, double u, double lambda, double eps,
+                   int niomtst, int nbos_tst);
 
 /*!
  * \defgroup HubSolns
