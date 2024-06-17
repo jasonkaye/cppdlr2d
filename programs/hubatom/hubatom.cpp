@@ -1,7 +1,6 @@
+#include "hubatom.hpp"
 #include "../../src/dlr2d.hpp"
 #include "../../src/polarization.hpp"
-#include "cppdlr/dlr_imtime.hpp"
-#include <cppdlr/cppdlr.hpp>
 #include <fmt/format.h>
 #include <fstream>
 #include <numbers>
@@ -9,137 +8,10 @@
 using namespace cppdlr;
 using namespace std::numbers;
 
-// NOTE: for now, unfortunately, nu means i*nu; change this in the future
-
-// Green's function for Hubbard atom
-std::complex<double> g_fun(double u, std::complex<double> nu) {
-  return 1.0 / (nu - u * u / (4 * nu));
-}
-
-// Three-point correlator (singlet)
-std::complex<double> chi_s_fun(double u, double beta, std::complex<double> nu1,
-                               std::complex<double> nu2) {
-  std::complex<double> val = 0;
-
-  // Regular part
-  val = (2 - u * u / (2 * nu1 * nu2));
-
-  // Singular part
-  if (abs(nu1 + nu2) == 0) {
-    val -=
-        beta * u * -k_it(0.0, -u / 2, beta) * (1.0 + u * u / (4 * nu1 * nu1));
-  }
-
-  // Multiply by Pi(nu1,nu2)
-  val *= g_fun(u, nu1) * g_fun(u, nu2);
-
-  return val;
-}
-
-// Three-point correlator (particle-hole)
-// channel = +1 (density) or -1 (magnetic)
-std::complex<double> chi_ph_fun(double u, double beta, std::complex<double> nu1,
-                                std::complex<double> nu2, int channel) {
-  double uu = channel * u;
-  std::complex<double> val = 0;
-
-  // Regular part
-  val = (2 + u * u / (2 * nu1 * nu2));
-
-  // Singular part
-  if (abs(nu1 - nu2) == 0) {
-    val -=
-        beta * uu * -k_it(0.0, -uu / 2, beta) * (1.0 - u * u / (4 * nu1 * nu1));
-  }
-
-  // Multiply by -1/2 * Pi(nu1,nu2)
-  val *= -g_fun(u, nu1) * g_fun(u, nu2) / 2;
-
-  // If density channel, add to singular part
-  if (channel == 1 && abs(nu1 - nu2) == 0) {
-    val += beta * g_fun(u, nu2);
-  }
-
-  return val;
-}
-
-// Three-point correlator (density)
-std::complex<double> chi_d_fun(double u, double beta, std::complex<double> nu1,
-                               std::complex<double> nu2) {
-  return chi_ph_fun(u, beta, nu1, nu2, 1);
-}
-
-// Three-point correlator (magnetic)
-std::complex<double> chi_m_fun(double u, double beta, std::complex<double> nu1,
-                               std::complex<double> nu2) {
-  return chi_ph_fun(u, beta, nu1, nu2, -1);
-}
-
-// Three-point vertex (singlet)
-std::complex<double> lam_s_fun(double u, double beta, std::complex<double> nu1,
-                               std::complex<double> nu2) {
-  std::complex<double> val = 0;
-
-  // Regular part of chi/Pi
-  val = 2 - u * u / (2 * nu1 * nu2);
-
-  // Singular part of chi/Pi
-  if (abs(nu1 + nu2) == 0) {
-    val -=
-        beta * u * -k_it(0.0, -u / 2, beta) * (1.0 + u * u / (4 * nu1 * nu2));
-  }
-
-  // Divide by eta
-  if (abs(nu1 + nu2) != 0) {
-    val /= 2.0;
-  } else {
-    val /= 2.0 - beta * u * -k_it(0.0, -u / 2, beta);
-  }
-
-  return val - 1.0;
-}
-
-// Three-point vertex (particle-hole)
-// channel = +1 (density) or -1 (magnetic)
-std::complex<double> lam_ph_fun(double u, double beta, std::complex<double> nu1,
-                                std::complex<double> nu2, int channel) {
-  double uu = channel * u;
-  std::complex<double> val = 0;
-
-  // Regular part of chi/Pi
-  val = 2 + u * u / (2 * nu1 * nu2);
-
-  // Singular part of chi/Pi
-  if (abs(nu1 - nu2) == 0) {
-    val -=
-        beta * uu * -k_it(0.0, -uu / 2, beta) * (1.0 - u * u / (4 * nu1 * nu2));
-  }
-
-  // Divide by eta
-  if (abs(nu1 - nu2) != 0) {
-    val /= 2.0;
-  } else {
-    val /= 2.0 - beta * uu * -k_it(0.0, -uu / 2, beta);
-  }
-
-  return val - 1.0;
-}
-
-// Three-point vertex (density)
-std::complex<double> lam_d_fun(double u, double beta, std::complex<double> nu1,
-                               std::complex<double> nu2) {
-  return lam_ph_fun(u, beta, nu1, nu2, 1);
-}
-
-// Three-point vertex (magnetic)
-std::complex<double> lam_m_fun(double u, double beta, std::complex<double> nu1,
-                               std::complex<double> nu2) {
-  return lam_ph_fun(u, beta, nu1, nu2, -1);
-}
-
-nda::vector<double> hubatom_driver(double beta, double u, double lambda,
-                                   double eps, int niom_dense, int niomtst,
-                                   int nbos_tst, bool reduced, bool compressbasis) {
+nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
+                                     double eps, int niomtst, int nbos_tst,
+                                     bool reduced, bool compressbasis,
+                                     int niom_dense) {
 
   auto path = "../../../dlr2d_if_data/"; // Path for DLR 2D grid data
 
@@ -156,7 +28,6 @@ nda::vector<double> hubatom_driver(double beta, double u, double lambda,
   if (!compressbasis) {
     dlr2d_if = read_dlr2d_if(path, filename);
   } else {
-    filename += "_compressed";
     std::tie(dlr2d_rfidx, dlr2d_if) = read_dlr2d_rfif(path, filename);
   }
 
@@ -186,7 +57,8 @@ nda::vector<double> hubatom_driver(double beta, double u, double lambda,
     fmt::print("Fine system matrix shape = {} x {}\n", niom_dense * niom_dense,
                3 * r * r + r);
   } else {
-    fmt::print("Fine system matrix shape = {} x {}\n", 3 * r * r + r, 3 * r * r + r);
+    fmt::print("Fine system matrix shape = {} x {}\n", 3 * r * r + r,
+               3 * r * r + r);
   }
 
   fmt::print("DLR rank squared = {}\n", r * r);
@@ -362,12 +234,18 @@ nda::vector<double> hubatom_driver(double beta, double u, double lambda,
   double lam_d_linf = max_element(abs(lam_d_tru));
   double lam_m_linf = max_element(abs(lam_m_tru));
 
-  double chi_s_l2err = sqrt(sum(pow(abs(chi_s_tru - chi_s_tst), 2))) / beta / beta;
-  double chi_d_l2err = sqrt(sum(pow(abs(chi_d_tru - chi_d_tst), 2))) / beta / beta;
-  double chi_m_l2err = sqrt(sum(pow(abs(chi_m_tru - chi_m_tst), 2))) / beta / beta;
-  double lam_s_l2err = sqrt(sum(pow(abs(lam_s_tru - lam_s_tst), 2))) / beta / beta;
-  double lam_d_l2err = sqrt(sum(pow(abs(lam_d_tru - lam_d_tst), 2))) / beta / beta;
-  double lam_m_l2err = sqrt(sum(pow(abs(lam_m_tru - lam_m_tst), 2))) / beta / beta;
+  double chi_s_l2err =
+      sqrt(sum(pow(abs(chi_s_tru - chi_s_tst), 2))) / beta / beta;
+  double chi_d_l2err =
+      sqrt(sum(pow(abs(chi_d_tru - chi_d_tst), 2))) / beta / beta;
+  double chi_m_l2err =
+      sqrt(sum(pow(abs(chi_m_tru - chi_m_tst), 2))) / beta / beta;
+  double lam_s_l2err =
+      sqrt(sum(pow(abs(lam_s_tru - lam_s_tst), 2))) / beta / beta;
+  double lam_d_l2err =
+      sqrt(sum(pow(abs(lam_d_tru - lam_d_tst), 2))) / beta / beta;
+  double lam_m_l2err =
+      sqrt(sum(pow(abs(lam_m_tru - lam_m_tst), 2))) / beta / beta;
 
   double chi_s_linferr = max_element(abs(chi_s_tru - chi_s_tst));
   double chi_d_linferr = max_element(abs(chi_d_tru - chi_d_tst));
@@ -377,40 +255,40 @@ nda::vector<double> hubatom_driver(double beta, double u, double lambda,
   double lam_m_linferr = max_element(abs(lam_m_tru - lam_m_tst));
 
   fmt::print("--- chi_S results ---\n");
-  fmt::print("L2 norm:    {}\n",    chi_s_l2);
-  fmt::print("Linf norm:  {}\n",    chi_s_linf);
-  fmt::print("L2 error:   {}\n",    chi_s_l2err);
-  fmt::print("Linf error: {}\n\n",  chi_s_linferr);
+  fmt::print("L2 norm:    {}\n", chi_s_l2);
+  fmt::print("Linf norm:  {}\n", chi_s_linf);
+  fmt::print("L2 error:   {}\n", chi_s_l2err);
+  fmt::print("Linf error: {}\n\n", chi_s_linferr);
 
   fmt::print("--- chi_D results ---\n");
-  fmt::print("L2 norm:    {}\n",    chi_d_l2);
-  fmt::print("Linf norm:  {}\n",    chi_d_linf);
-  fmt::print("L2 error:   {}\n",    chi_d_l2err);
-  fmt::print("Linf error: {}\n\n",  chi_d_linferr);
+  fmt::print("L2 norm:    {}\n", chi_d_l2);
+  fmt::print("Linf norm:  {}\n", chi_d_linf);
+  fmt::print("L2 error:   {}\n", chi_d_l2err);
+  fmt::print("Linf error: {}\n\n", chi_d_linferr);
 
   fmt::print("--- chi_M results ---\n");
-  fmt::print("L2 norm:    {}\n",    chi_m_l2);
-  fmt::print("Linf norm:  {}\n",    chi_m_linf);
-  fmt::print("L2 error:   {}\n",    chi_m_l2err);
-  fmt::print("Linf error: {}\n\n",  chi_m_linferr);
+  fmt::print("L2 norm:    {}\n", chi_m_l2);
+  fmt::print("Linf norm:  {}\n", chi_m_linf);
+  fmt::print("L2 error:   {}\n", chi_m_l2err);
+  fmt::print("Linf error: {}\n\n", chi_m_linferr);
 
   fmt::print("--- lambda_S results ---\n");
-  fmt::print("L2 norm:    {}\n",    lam_s_l2);
-  fmt::print("Linf norm:  {}\n",    lam_s_linf);
-  fmt::print("L2 error:   {}\n",    lam_s_l2err);
-  fmt::print("Linf error: {}\n\n",  lam_s_linferr);
+  fmt::print("L2 norm:    {}\n", lam_s_l2);
+  fmt::print("Linf norm:  {}\n", lam_s_linf);
+  fmt::print("L2 error:   {}\n", lam_s_l2err);
+  fmt::print("Linf error: {}\n\n", lam_s_linferr);
 
   fmt::print("--- lambda_D results ---\n");
-  fmt::print("L2 norm:    {}\n",    lam_d_l2);
-  fmt::print("Linf norm:  {}\n",    lam_d_linf);
-  fmt::print("L2 error:   {}\n",    lam_d_l2err);
-  fmt::print("Linf error: {}\n\n",  lam_d_linferr);
+  fmt::print("L2 norm:    {}\n", lam_d_l2);
+  fmt::print("Linf norm:  {}\n", lam_d_linf);
+  fmt::print("L2 error:   {}\n", lam_d_l2err);
+  fmt::print("Linf error: {}\n\n", lam_d_linferr);
 
   fmt::print("--- lambda_M results ---\n");
-  fmt::print("L2 norm:    {}\n",    lam_m_l2);
-  fmt::print("Linf norm:  {}\n",    lam_m_linf);
-  fmt::print("L2 error:   {}\n",    lam_m_l2err);
-  fmt::print("Linf error: {}\n\n",  lam_m_linferr);
+  fmt::print("L2 norm:    {}\n", lam_m_l2);
+  fmt::print("Linf norm:  {}\n", lam_m_linf);
+  fmt::print("L2 error:   {}\n", lam_m_l2err);
+  fmt::print("Linf error: {}\n\n", lam_m_linferr);
 
   // Compute polarization from DLR expansions
   auto itops = imtime_ops(lambda, dlr_rf);
@@ -418,18 +296,23 @@ nda::vector<double> hubatom_driver(double beta, double u, double lambda,
   // auto pol_s =
   //     polarization(beta, ifops_fer, ifops_bos, gc, gc, lam_s_c, lam_s_csing);
   // pol_s += polarization_const(beta, itops, ifops_bos, gc, gc);
-  auto pol_s = polarization_new(beta, lambda, eps, itops, ifops_fer, ifops_bos, gc, gc, lam_s_c, lam_s_csing);
+  auto pol_s = polarization_new(beta, lambda, eps, itops, ifops_fer, ifops_bos,
+                                gc, gc, lam_s_c, lam_s_csing);
   pol_s *= -1.0 / 2;
 
   // auto pol_d =
-  //     polarization(beta, ifops_fer, ifops_bos, grc, gc, lam_d_c, lam_d_csing);
+  //     polarization(beta, ifops_fer, ifops_bos, grc, gc, lam_d_c,
+  //     lam_d_csing);
   // pol_d += polarization_const(beta, itops, ifops_bos, grc, gc);
-  auto pol_d = polarization_new(beta, lambda, eps, itops, ifops_fer, ifops_bos, grc, gc, lam_d_c, lam_d_csing);
+  auto pol_d = polarization_new(beta, lambda, eps, itops, ifops_fer, ifops_bos,
+                                grc, gc, lam_d_c, lam_d_csing);
 
   // auto pol_m =
-  //     polarization(beta, ifops_fer, ifops_bos, grc, gc, lam_m_c, lam_m_csing);
+  //     polarization(beta, ifops_fer, ifops_bos, grc, gc, lam_m_c,
+  //     lam_m_csing);
   // pol_m += polarization_const(beta, itops, ifops_bos, grc, gc);
-  auto pol_m = polarization_new(beta, lambda, eps, itops, ifops_fer, ifops_bos, grc, gc, lam_m_c, lam_m_csing);
+  auto pol_m = polarization_new(beta, lambda, eps, itops, ifops_fer, ifops_bos,
+                                grc, gc, lam_m_c, lam_m_csing);
 
   auto pol_s_c = ifops_bos.vals2coefs(beta, pol_s); // DLR expansion
   auto pol_d_c = ifops_bos.vals2coefs(beta, pol_d);
@@ -501,8 +384,6 @@ nda::vector<double> hubatom_driver(double beta, double u, double lambda,
   fmt::print("L2 error:   {}\n", pol_m_l2err);
   fmt::print("Linf error: {}\n\n", pol_m_linferr);
 
-
-
   auto results = nda::vector<double>(42);
   results(0) = beta;
   results(1) = u;
@@ -547,7 +428,6 @@ nda::vector<double> hubatom_driver(double beta, double u, double lambda,
   results(40) = pol_m_l2err;
   results(41) = pol_m_linferr;
 
-
   // // Output polarization to file
   // std::ofstream f1("pol_tst.dat");
   // std::ofstream f2("pol_tru.dat");
@@ -562,55 +442,121 @@ nda::vector<double> hubatom_driver(double beta, double u, double lambda,
 
   // PRINT(make_regular(abs(pol_m_tru - pol_m_tst)));
   return results;
-
 }
 
-int main() {
-  double beta = 64;     // Inverse temperature
-  double u = 1.0;       // Interaction
-  double lambda = 64;   // DLR cutoff
-  double eps = 1e-12;   // DLR tolerance
-  int niom_dense = 100; // # imag freq sample pts for fine grid (must be even)
-  int niomtst = 512;    // # imag freq test points (must be even)
-  int nbos_tst = 64;   // # pts in test grid for polarization
-  bool reduced = true;  // Full or reduced fine grid
-  bool compressbasis = false;
+// NOTE: for now, unfortunately, nu means i*nu; change this in the future
 
-  auto results = hubatom_driver(beta, u, lambda, eps, niom_dense, niomtst,
-                                nbos_tst, reduced, compressbasis);
+std::complex<double> g_fun(double u, std::complex<double> nu) {
+  return 1.0 / (nu - u * u / (4 * nu));
 }
 
-// int main() {
-//   // double beta = 40;     // Inverse temperature
-//   double u = 1.0;       // Interaction
-//   // double lambda = 40;   // DLR cutoff
-//   double eps = 1e-8;   // DLR tolerance
-//   int niomtst  = 1024;    // # imag freq test points (must be even)
-//   int nbos_tst = 1024;   // # pts in test grid for polarization
-//   bool reduced = true;  // Full or reduced fine grid
-//   bool compressbasis = false;
-//   int niom_dense = 100; // # imag freq sample pts for fine grid (must be even)
-// 
-//   auto filename = "hubatom_eps8_tst1024_new";
-// 
-//   int nexp = 11;
-//   int nresult = 42;
-//   auto results = nda::array<double, 2>(nresult, nexp);
-//   double beta = 0, lambda = 0;
-//   for (int i = 0; i < nexp; ++i) {
-//     beta = pow(2.0,i);
-//     lambda = beta;
-//     results(_, i) = hubatom_driver(beta, u, lambda, eps, niom_dense, niomtst,
-//                                 nbos_tst, reduced, compressbasis);
-//   }
-// 
-//   // Output results to file in double precision
-//   std::ofstream f(filename);
-//   f.precision(16);
-//   for (int i = 0; i < nexp; ++i) {
-//     for (int j = 0; j < nresult; ++j) {
-//       f << results(j, i) << "\n";
-//     }
-//   } 
-// 
-// }
+std::complex<double> chi_s_fun(double u, double beta, std::complex<double> nu1,
+                               std::complex<double> nu2) {
+  std::complex<double> val = 0;
+
+  // Regular part
+  val = (2 - u * u / (2 * nu1 * nu2));
+
+  // Singular part
+  if (abs(nu1 + nu2) == 0) {
+    val -=
+        beta * u * -k_it(0.0, -u / 2, beta) * (1.0 + u * u / (4 * nu1 * nu1));
+  }
+
+  // Multiply by Pi(nu1,nu2)
+  val *= g_fun(u, nu1) * g_fun(u, nu2);
+
+  return val;
+}
+
+std::complex<double> chi_ph_fun(double u, double beta, std::complex<double> nu1,
+                                std::complex<double> nu2, int channel) {
+  double uu = channel * u;
+  std::complex<double> val = 0;
+
+  // Regular part
+  val = (2 + u * u / (2 * nu1 * nu2));
+
+  // Singular part
+  if (abs(nu1 - nu2) == 0) {
+    val -=
+        beta * uu * -k_it(0.0, -uu / 2, beta) * (1.0 - u * u / (4 * nu1 * nu1));
+  }
+
+  // Multiply by -1/2 * Pi(nu1,nu2)
+  val *= -g_fun(u, nu1) * g_fun(u, nu2) / 2;
+
+  // If density channel, add to singular part
+  if (channel == 1 && abs(nu1 - nu2) == 0) {
+    val += beta * g_fun(u, nu2);
+  }
+
+  return val;
+}
+
+std::complex<double> chi_d_fun(double u, double beta, std::complex<double> nu1,
+                               std::complex<double> nu2) {
+  return chi_ph_fun(u, beta, nu1, nu2, 1);
+}
+
+std::complex<double> chi_m_fun(double u, double beta, std::complex<double> nu1,
+                               std::complex<double> nu2) {
+  return chi_ph_fun(u, beta, nu1, nu2, -1);
+}
+
+std::complex<double> lam_s_fun(double u, double beta, std::complex<double> nu1,
+                               std::complex<double> nu2) {
+  std::complex<double> val = 0;
+
+  // Regular part of chi/Pi
+  val = 2 - u * u / (2 * nu1 * nu2);
+
+  // Singular part of chi/Pi
+  if (abs(nu1 + nu2) == 0) {
+    val -=
+        beta * u * -k_it(0.0, -u / 2, beta) * (1.0 + u * u / (4 * nu1 * nu2));
+  }
+
+  // Divide by eta
+  if (abs(nu1 + nu2) != 0) {
+    val /= 2.0;
+  } else {
+    val /= 2.0 - beta * u * -k_it(0.0, -u / 2, beta);
+  }
+
+  return val - 1.0;
+}
+
+std::complex<double> lam_ph_fun(double u, double beta, std::complex<double> nu1,
+                                std::complex<double> nu2, int channel) {
+  double uu = channel * u;
+  std::complex<double> val = 0;
+
+  // Regular part of chi/Pi
+  val = 2 + u * u / (2 * nu1 * nu2);
+
+  // Singular part of chi/Pi
+  if (abs(nu1 - nu2) == 0) {
+    val -=
+        beta * uu * -k_it(0.0, -uu / 2, beta) * (1.0 - u * u / (4 * nu1 * nu2));
+  }
+
+  // Divide by eta
+  if (abs(nu1 - nu2) != 0) {
+    val /= 2.0;
+  } else {
+    val /= 2.0 - beta * uu * -k_it(0.0, -uu / 2, beta);
+  }
+
+  return val - 1.0;
+}
+
+std::complex<double> lam_d_fun(double u, double beta, std::complex<double> nu1,
+                               std::complex<double> nu2) {
+  return lam_ph_fun(u, beta, nu1, nu2, 1);
+}
+
+std::complex<double> lam_m_fun(double u, double beta, std::complex<double> nu1,
+                               std::complex<double> nu2) {
+  return lam_ph_fun(u, beta, nu1, nu2, -1);
+}

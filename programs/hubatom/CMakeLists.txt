@@ -1,11 +1,17 @@
+# Set main program files
+set(main_program_sources
+  hubatom_allfuncs.cpp
+  hubatom_allfuncs_manylambda.cpp
+  )
 
-set(program_sources
+# Set implementation files
+set(implementation_sources
   hubatom.cpp
   )
 
-foreach(source_file ${program_sources})
-  STRING(REGEX REPLACE ".cpp" "" program_name "${source_file}")
-  add_executable(${program_name} ${source_file})
-  target_link_libraries(${program_name} nddlr_c)
+foreach(main_source ${main_program_sources})
+  get_filename_component(program_name ${main_source} NAME_WE)
+  add_executable(${program_name} ${main_source} ${implementation_sources})
+  target_link_libraries(${program_name} PRIVATE nddlr_c)
   target_include_directories(${program_name} PRIVATE ${CMAKE_SOURCE_DIR}/src/)
-endforeach(source_file)
+endforeach()
