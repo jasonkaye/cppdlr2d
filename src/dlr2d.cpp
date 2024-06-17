@@ -704,11 +704,16 @@ std::string get_filename(double lambda, double eps, int niom_dense) {
   return filenameStream.str();
 }
 
-std::string get_filename(double lambda, double eps) {
+std::string get_filename(double lambda, double eps, bool compressed) {
 
   std::ostringstream filenameStream;
-  filenameStream << "dlr2d_if_reduced_" << lambda << "_" << std::scientific
+  if (!compressed) {
+    filenameStream << "dlr2d_if_reduced_" << lambda << "_" << std::scientific
                  << std::setprecision(2) << eps << ".h5";
+  } else {
+    filenameStream << "dlr2d_if_reduced_" << lambda << "_" << std::scientific
+                 << std::setprecision(2) << eps << "_compressed" << ".h5";
+  }
   return filenameStream.str();
 }
 

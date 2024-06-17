@@ -66,7 +66,7 @@ uncompress_basis(int r, nda::array<int, 2> dlr2d_rfidx,
 std::string get_filename(double lambda, double eps, int niom_dense);
 
 // Generate name for dlr2d_if file
-std::string get_filename(double lambda, double eps);
+std::string get_filename(double lambda, double eps, bool compressed = 0);
 
 // Estimate rank of a square matrix A for which the full pivoted QR
 // decomposition has been obtained using the function geqp3. The
