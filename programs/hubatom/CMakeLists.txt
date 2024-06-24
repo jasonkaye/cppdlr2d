@@ -1,6 +1,8 @@
 # Set main program files
 set(main_program_sources
   hubatom_allfuncs.cpp
+  hubatom_lam_s.cpp
+  hubatom_chi_d.cpp
   hubatom_allfuncs_manylambda.cpp
   )
 

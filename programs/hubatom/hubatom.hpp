@@ -47,9 +47,15 @@ nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
  * \param[in] nbos_tst      # bosonic Matsubara freqs in test grid for
  * polarization
  */
-void hubatom_lam_s(double beta, double u, double lambda, double eps,
-                   int niomtst, int nbos_tst);
 
+void hubatom_lam_s(double beta, double u, double lambda, double eps,
+                  int niomtst, int nbos_tst);
+
+// nda::vector<double> hubatom_lam_s(double beta, double u, double lambda,
+//                                    double eps, int niomtst, int nbos_tst);
+
+void hubatom_chi_d(double beta, double u, double lambda,
+                                     double eps, int niomtst, int nbos_tst);
 /*!
  * \defgroup HubSolns
  * \brief Analytical solutions for the Hubbard atom example
