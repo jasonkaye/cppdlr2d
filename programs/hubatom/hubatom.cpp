@@ -460,7 +460,7 @@ std::complex<double> chi_s_fun(double u, double beta, std::complex<double> nu1,
   // Singular part
   if (abs(nu1 + nu2) == 0) {
     val -=
-        beta * u * -k_it(0.0, -u / 2, beta) * (1.0 + u * u / (4 * nu1 * nu1));
+        beta * u * -k_it(0.0, -u / 2, beta) * (1.0 - u * u / (4 * nu1 * nu1));
   }
 
   // Multiply by Pi(nu1,nu2)
