@@ -146,7 +146,7 @@ read_dlr2d_rfif(std::string path, std::string filename) {
 }
 
 // Obtain 2D DLR nodes using reduced fine grid, mixed fermionic/bosonic
-// representation
+// representation, three terms
 void get_dlr2d_if_reduced(nda::vector<double> dlr_rf,
                           nda::vector<int> dlr_if_fer,
                           nda::vector<int> dlr_if_bos, double eps,
@@ -157,7 +157,7 @@ void get_dlr2d_if_reduced(nda::vector<double> dlr_rf,
   int r = dlr_rf.size();
 
   // Get fine 2D Matsubara frequency sampling grid
-  auto nu2didx = nda::array<int, 2>(3 * r * r + r, 2);
+  auto nu2didx = nda::array<int, 2>(3 * r * r, 2);
   for (int m = 0; m < r; ++m) {
     for (int n = 0; n < r; ++n) {
       nu2didx(m * r + n, 0) = dlr_if_fer(m); // nu1 = (2*m_j + 1)*i*pi
@@ -227,7 +227,7 @@ void get_dlr2d_if_reduced(nda::vector<double> dlr_rf,
       // }
     }
   }
-  
+
   // Pivoted QR to determine sampling nodes
   auto kmatt = nda::matrix<dcomplex, F_layout>(transpose(kmat));
   auto start = std::chrono::high_resolution_clock::now();
@@ -271,6 +271,7 @@ void get_dlr2d_if_reduced(nda::vector<double> dlr_rf,
   fmt::print("DLR rank squared = {}\n", r * r);
   fmt::print("System matrix rank = {}\n\n", niom_skel);
 }
+
 
 // Obtain 2D DLR nodes using reduced fine grid, recompression of basis
 void get_dlr2d_rfif(nda::vector<double> dlr_rf, nda::vector<int> dlr_if_fer,
