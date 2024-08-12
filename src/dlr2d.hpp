@@ -20,11 +20,6 @@ void get_dlr2d_if_reduced(nda::vector<double> dlr_rf,
                           nda::vector<int> dlr_if_bos, double eps,
                           std::string path, std::string filename);
 
-void get_dlr2d_if_reduced_no_singular_part(nda::vector<double> dlr_rf,
-                          nda::vector<int> dlr_if_fer,
-                          nda::vector<int> dlr_if_bos, double eps,
-                          std::string path, std::string filename);
-
 void get_dlr2d_rfif(nda::vector<double> dlr_rf, nda::vector<int> dlr_if_fer,
                     nda::vector<int> dlr_if_bos, double eps, std::string path,
                     std::string filename);

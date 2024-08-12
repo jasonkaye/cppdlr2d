@@ -57,7 +57,7 @@ nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
     fmt::print("Fine system matrix shape = {} x {}\n", niom_dense * niom_dense,
                3 * r * r + r);
   } else {
-    fmt::print("Fine system matrix shape = {} x {}\n", 3 * r * r + r,
+    fmt::print("Fine system matrix shape = {} x {}\n", 3 * r * r,
                3 * r * r + r);
   }
 

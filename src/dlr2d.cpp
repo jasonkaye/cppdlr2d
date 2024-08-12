@@ -174,21 +174,17 @@ void get_dlr2d_if_reduced(nda::vector<double> dlr_rf,
           dlr_if_bos(n) - dlr_if_fer(m) -
           1; // nu2 = 2*n_k*i*pi - (2*m_j+1)*i*pi = (2*(n_k-m_j-1)+1)*i*pi
     }
-
-    nu2didx(3 * r * r + m, 0) = dlr_if_fer(m); // nu1 = (2*m_j + 1)*i*pi
-    nu2didx(3 * r * r + m, 1) =
-        -dlr_if_fer(m) - 1; // nu2 = -(2*m_j + 1)*i*pi = (2*(-m_j-1)+1)*i*pi
   }
 
   auto nu2d = (2 * nu2didx + 1) * pi * 1i;
 
   // Get system matrix for dense grid
-  auto kmat = nda::matrix<dcomplex, F_layout>(3 * r * r + r, 3 * r * r + r);
+  auto kmat = nda::matrix<dcomplex, F_layout>(3 * r * r, 3 * r * r + r);
 
   // Regular part
   for (int k = 0; k < r; ++k) {
     for (int l = 0; l < r; ++l) {
-      for (int n = 0; n < 3 * r * r + r; ++n) {
+      for (int n = 0; n < 3 * r * r; ++n) {
 
         kmat(n, k * r + l) = k_if(nu2didx(n, 0), dlr_rf(k), Fermion) *
                              k_if(nu2didx(n, 1), dlr_rf(l), Fermion);
@@ -231,7 +227,7 @@ void get_dlr2d_if_reduced(nda::vector<double> dlr_rf,
       // }
     }
   }
-
+  
   // Pivoted QR to determine sampling nodes
   auto kmatt = nda::matrix<dcomplex, F_layout>(transpose(kmat));
   auto start = std::chrono::high_resolution_clock::now();
@@ -251,133 +247,6 @@ void get_dlr2d_if_reduced(nda::vector<double> dlr_rf,
   } else {
     double errsq = 0;
     for (int k = 3 * r * r + r - 1; k >= 0; --k) {
-      errsq += pow(abs(kmatt(k, k)), 2);
-      if (sqrt(errsq) > eps) {
-        niom_skel = k;
-        break;
-      }
-    }
-  }
-  // int niom_skel = estimate_rank(kmatt, eps, 2.0, 100);
-
-  // Extract skeleton nodes from pivots
-  auto dlr2d_if = nda::array<int, 2>(niom_skel, 2);
-  for (int k = 0; k < niom_skel; ++k) {
-    dlr2d_if(k, 0) = nu2didx(piv(k), 0);
-    dlr2d_if(k, 1) = nu2didx(piv(k), 1);
-  }
-
-  // Write dlr2d_if to hdf5 file
-  h5::file file(path + filename, 'w');
-  h5::group mygroup(file);
-  h5::write(mygroup, "dlr2d_if", dlr2d_if);
-
-  fmt::print("DLR rank squared = {}\n", r * r);
-  fmt::print("System matrix rank = {}\n\n", niom_skel);
-}
-
-void get_dlr2d_if_reduced_no_singular_part(nda::vector<double> dlr_rf,
-                          nda::vector<int> dlr_if_fer,
-                          nda::vector<int> dlr_if_bos, double eps,
-                          std::string path, std::string filename) {
-
-  int rankmethod = 1;
-
-  int r = dlr_rf.size();
-
-  // Get fine 2D Matsubara frequency sampling grid
-  auto nu2didx = nda::array<int, 2>(3 * r * r, 2);
-  for (int m = 0; m < r; ++m) {
-    for (int n = 0; n < r; ++n) {
-      nu2didx(m * r + n, 0) = dlr_if_fer(m); // nu1 = (2*m_j + 1)*i*pi
-      nu2didx(m * r + n, 1) = dlr_if_fer(n); // nu2 = (2*n_j + 1)*i*pi
-
-      nu2didx(r * r + m * r + n, 0) =
-          dlr_if_bos(n) - dlr_if_fer(m) -
-          1; // nu1 = 2*n_k*i*pi - (2*m_j+1)*i*pi = (2*(n_k-m_j-1)+1)*i*pi
-      nu2didx(r * r + m * r + n, 1) = dlr_if_fer(m); // nu2 = (2*m_j + 1)*i*pi
-
-      nu2didx(2 * r * r + m * r + n, 0) =
-          dlr_if_fer(m); // nu1 = (2*m_j + 1)*i*pi
-      nu2didx(2 * r * r + m * r + n, 1) =
-          dlr_if_bos(n) - dlr_if_fer(m) -
-          1; // nu2 = 2*n_k*i*pi - (2*m_j+1)*i*pi = (2*(n_k-m_j-1)+1)*i*pi
-    }
-  }
-
-  auto nu2d = (2 * nu2didx + 1) * pi * 1i;
-
-  // Get system matrix for dense grid
-  auto kmat = nda::matrix<dcomplex, F_layout>(3 * r * r, 3 * r * r + r);
-
-  // Regular part
-  for (int k = 0; k < r; ++k) {
-    for (int l = 0; l < r; ++l) {
-      for (int n = 0; n < 3 * r * r; ++n) {
-
-        kmat(n, k * r + l) = k_if(nu2didx(n, 0), dlr_rf(k), Fermion) *
-                             k_if(nu2didx(n, 1), dlr_rf(l), Fermion);
-        // kmat(n, r * r + k * r + l) =
-        //     k_if(nu2didx(n, 1), dlr_rf(k), Fermion) *
-        //     my_k_if_boson(nu2didx(n, 0) + nu2didx(n, 1) + 1, dlr_rf(l));
-        // kmat(n, 2 * r * r + k * r + l) =
-        //     k_if(nu2didx(n, 0), dlr_rf(k), Fermion) *
-        //     my_k_if_boson(nu2didx(n, 0) + nu2didx(n, 1) + 1, dlr_rf(l));
-        kmat(n, r * r + k * r + l) =
-            k_if(nu2didx(n, 1), dlr_rf(k), Fermion) *
-            k_if(nu2didx(n, 0) + nu2didx(n, 1) + 1, dlr_rf(l), Boson);
-        kmat(n, 2 * r * r + k * r + l) =
-            k_if(nu2didx(n, 0), dlr_rf(k), Fermion) *
-            k_if(nu2didx(n, 0) + nu2didx(n, 1) + 1, dlr_rf(l), Boson);
-
-        // kmat(n, k * r + l) =
-        //     ker(nu2d(n, 0), dlr_rf(k)) * ker(nu2d(n, 1), dlr_rf(l));
-        // kmat(n, r * r + k * r + l) = ker(nu2d(n, 1), dlr_rf(k)) *
-        //                              ker(nu2d(n, 0) + nu2d(n, 1), dlr_rf(l));
-        // kmat(n, 2 * r * r + k * r + l) =
-        //     ker(nu2d(n, 0), dlr_rf(k)) *
-        //     ker(nu2d(n, 0) + nu2d(n, 1), dlr_rf(l));
-      }
-    }
-  }
-
-  // Singular part
-  for (int k = 0; k < r; ++k) {
-    for (int n = 0; n < 3 * r * r; ++n) {
-      if (nu2didx(n, 0) == -nu2didx(n, 1) - 1) {
-        kmat(n, 3 * r * r + k) = k_if(nu2didx(n, 0), dlr_rf(k), Fermion);
-      } else {
-        kmat(n, 3 * r * r + k) = 0;
-      }
-      // if (nu2d(n, 0) == -nu2d(n, 1)) {
-      //   kmat(n, 3 * r * r + k) = ker(nu2d(n, 0), dlr_rf(k));
-      // } else {
-      //   kmat(n, 3 * r * r + k) = 0;
-      // }
-    }
-  }
-
-  fmt::print("Size = {},{}\n", kmat.shape(0), kmat.shape(1));
-
-  // Pivoted QR to determine sampling nodes
-  auto kmatt = nda::matrix<dcomplex, F_layout>(transpose(kmat));
-  auto start = std::chrono::high_resolution_clock::now();
-  auto piv = nda::zeros<int>(3 * r * r + r);
-  auto tau = nda::vector<dcomplex>(3 * r * r + r);
-  nda::lapack::geqp3(kmatt, piv, tau);
-
-  // Estimate rank
-  int niom_skel = 0;
-  if (rankmethod == 1) {
-    for (int k = 0; k < 3 * r * r; ++k) {
-      if (abs(kmatt(k, k)) < eps) {
-        niom_skel = k;
-        break;
-      }
-    }
-  } else {
-    double errsq = 0;
-    for (int k = 3 * r * r - 1; k >= 0; --k) {
       errsq += pow(abs(kmatt(k, k)), 2);
       if (sqrt(errsq) > eps) {
         niom_skel = k;

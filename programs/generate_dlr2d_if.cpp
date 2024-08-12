@@ -40,7 +40,7 @@ void generate_dlr2d_if_driver(nda::vector<double> lambdas, double eps,
       auto filename = get_filename(lambda, eps, niom_dense);
       get_dlr2d_if(dlr_rf, niom_dense, eps, path, filename);
     } else {
-      fmt::print("System matrix shape = {} x {}\n", 3 * r * r + r,
+      fmt::print("System matrix shape = {} x {}\n", 3 * r * r,
                  3 * r * r + r);
       auto filename = get_filename(lambda, eps, compressbasis);
       if (!compressbasis) {
@@ -58,7 +58,7 @@ void generate_dlr2d_if_driver(nda::vector<double> lambdas, double eps,
 
 int main() {
 
-  double eps = 1e-4;   // DLR tolerance
+  double eps = 1e-12;   // DLR tolerance
   bool reduced = true; // Full or reduced fine grid
   bool compressbasis = false;
   auto path = "../../dlr2d_if_data/"; // Path for DLR 2D grid data
