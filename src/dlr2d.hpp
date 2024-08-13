@@ -20,6 +20,13 @@ void get_dlr2d_if_reduced(nda::vector<double> dlr_rf,
                           nda::vector<int> dlr_if_bos, double eps,
                           std::string path, std::string filename);
 
+// Obtain 2D DLR nodes using reduced fine grid, mixed fermionic/bosonic
+// representation of two regular terms, rather than the original three
+void get_dlr2d_if_reduced_two_terms(nda::vector<double> dlr_rf,
+                                    nda::vector<int> dlr_if_fer,
+                                    nda::vector<int> dlr_if_bos, double eps,
+                                    std::string path, std::string filename);
+
 void get_dlr2d_rfif(nda::vector<double> dlr_rf, nda::vector<int> dlr_if_fer,
                     nda::vector<int> dlr_if_bos, double eps, std::string path,
                     std::string filename);
@@ -34,6 +41,12 @@ read_dlr2d_rfif(std::string path, std::string filename);
 nda::matrix<dcomplex, F_layout>
 get_kmat(double beta, nda::vector<double> dlr_rf, nda::array<int, 2> dlr2d_if);
 
+// Obtain kernel matrix for fitting 2D DLR expansion, using representation of
+// two regular terms, rather than three
+nda::matrix<dcomplex, F_layout> get_kmat_two_terms(double beta,
+                                                   nda::vector<double> dlr_rf,
+                                                   nda::array<int, 2> dlr2d_if);
+
 nda::matrix<dcomplex, F_layout>
 get_kmat_compressed(double beta, nda::vector<double> dlr_rf,
                     nda::array<int, 2> dlr2d_rfidx,
@@ -43,9 +56,18 @@ std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>>
 dlr2d_vals2coefs(nda::matrix<dcomplex, F_layout> kmat,
                  nda::vector_const_view<dcomplex> vals, int r);
 
+std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>>
+dlr2d_vals2coefs_two_terms(nda::matrix<dcomplex, F_layout> kmat,
+                           nda::vector_const_view<dcomplex> vals, int r);
+
 std::tuple<nda::array<dcomplex, 4>, nda::array<dcomplex, 2>>
 dlr2d_vals2coefs_many(nda::matrix<dcomplex, F_layout> kmat,
                       nda::array_const_view<dcomplex, 2, F_layout> vals, int r);
+
+std::tuple<nda::array<dcomplex, 4>, nda::array<dcomplex, 2>>
+dlr2d_vals2coefs_many_two_terms(
+    nda::matrix<dcomplex, F_layout> kmat,
+    nda::array_const_view<dcomplex, 2, F_layout> vals, int r);
 
 nda::array<dcomplex, 1>
 dlr2d_vals2coefs_compressed(nda::matrix<dcomplex, F_layout> kmat,
@@ -58,6 +80,12 @@ dlr2d_coefs2eval(double beta, nda::vector<double> dlr_rf,
                  nda::array_const_view<dcomplex, 1> gc_skel, int m, int n,
                  int channel);
 
+std::complex<double>
+dlr2d_coefs2eval_two_terms(double beta, nda::vector<double> dlr_rf,
+                           nda::array_const_view<dcomplex, 3> gc,
+                           nda::array_const_view<dcomplex, 1> gc_sing, int m,
+                           int n, int channel);
+
 std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>>
 uncompress_basis(int r, nda::array<int, 2> dlr2d_rfidx,
                  nda::array<dcomplex, 1> coef);
@@ -67,6 +95,9 @@ std::string get_filename(double lambda, double eps, int niom_dense);
 
 // Generate name for dlr2d_if file
 std::string get_filename(double lambda, double eps, bool compressed = 0);
+
+// Generate name for dlr2d_if file with 2 terms
+std::string get_filename_two_terms(double lambda, double eps);
 
 // Estimate rank of a square matrix A for which the full pivoted QR
 // decomposition has been obtained using the function geqp3. The

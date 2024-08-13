@@ -10,7 +10,12 @@ int main() {
   int nbos_tst = 64;    // # pts in test grid for polarization
   bool reduced = true;  // Full or reduced fine grid
   bool compressbasis = false;
+  bool two_terms = true; // 2+1 or 3+1-term 2D DLR
 
-  auto results = hubatom_allfuncs(beta, u, lambda, eps, niomtst,
-                                  nbos_tst, reduced, compressbasis, niom_dense);
+  if (two_terms) {
+    hubatom_allfuncs_two_terms(beta, u, lambda, eps, niomtst, nbos_tst);
+  } else {
+    auto results = hubatom_allfuncs(beta, u, lambda, eps, niomtst, nbos_tst,
+                                    reduced, compressbasis, niom_dense);
+  }
 }
