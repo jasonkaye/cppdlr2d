@@ -146,7 +146,7 @@ read_dlr2d_rfif(std::string path, std::string filename) {
 }
 
 // Obtain 2D DLR nodes using reduced fine grid, mixed fermionic/bosonic
-// representation, three terms
+// representation three regular terms and one singular term
 void get_dlr2d_if_reduced(nda::vector<double> dlr_rf,
                           nda::vector<int> dlr_if_fer,
                           nda::vector<int> dlr_if_bos, double eps,

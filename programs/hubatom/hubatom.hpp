@@ -33,8 +33,35 @@ nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
                                      bool reduced, bool compressbasis,
                                      int niom_dense = 0);
 
+/*!
+ * \brief Driver function for Hubbard atom example, all functions, using
+ * 2+1-term 2D DLR
+ *
+ * This function expands the Green's function, three-point correlators, and
+ * vertex functions in all channels for the Hubbard atom in the DLR. It then
+ * computes the polarization function in all channels. It measures the error of
+ * all of these representations.
+ *
+ * It uses the 2D DLR with two regular terms and one singular term, rather than
+ * the original representation with three regular terms and one singular term.
+ *
+ * \param[in] beta          Inverse temperature
+ * \param[in] u             Hubbard interaction
+ * \param[in] lambda        DLR cutoff
+ * \param[in] eps           Error tolerance
+ * \param[in] niomtst       # Matsubara freqs per dim in test grid
+ * \param[in] nbos_tst      # bosonic Matsubara freqs in test grid for
+ * polarization
+ * \param[in] reduced       Use reduced fine Matsubara freq grid
+ * \param[in] compressbasis Recompress 2D DLR basis
+ * \param[in] niom_dense    # Matsubara freqs in fine grid (only used if
+ * reduced=false)
+ *
+ * \return Vector containing problem parameters and errors, for analysis and
+ * plotting
+ */
 void hubatom_allfuncs_two_terms(double beta, double u, double lambda,
-                                     double eps, int niomtst, int nbos_tst);
+                                double eps, int niomtst, int nbos_tst);
 
 /*!
  * \defgroup HubSolns
