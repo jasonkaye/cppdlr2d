@@ -444,6 +444,343 @@ nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
   return results;
 }
 
+void hubatom_allfuncs_two_terms(double beta, double u, double lambda,
+                                     double eps, int niomtst, int nbos_tst) {
+
+  auto path = "../../../dlr2d_if_data/"; // Path for DLR 2D grid data
+
+  // Read 2D DLR grid indices from file
+  std::string filename;
+
+  filename = get_filename_two_terms(lambda, eps);
+
+  auto dlr2d_if = nda::array<int, 2>();
+  auto dlr2d_rfidx = nda::array<int, 2>();
+  dlr2d_if = read_dlr2d_if(path, filename);
+
+  // Get DLR nodes for particle-hole channel
+  auto dlr2d_if_ph = nda::array<int, 2>(dlr2d_if.shape());
+  dlr2d_if_ph(_, 0) = -dlr2d_if(_, 0) - 1;
+  dlr2d_if_ph(_, 1) = dlr2d_if(_, 1);
+
+  // Get DLR frequencies
+  auto dlr_rf = build_dlr_rf(lambda, eps);
+  int r = dlr_rf.size(); // # DLR basis functions
+
+  fmt::print("\nDLR cutoff Lambda = {}\n", lambda);
+  fmt::print("DLR tolerance epsilon = {}\n", eps);
+  fmt::print("# DLR basis functions = {}\n", r);
+
+  // Build kernel matrix
+  auto kmat = nda::matrix<dcomplex>();
+  kmat = get_kmat_two_terms(beta, dlr_rf, dlr2d_if);
+  int niom = dlr2d_if.shape(0);
+
+  fmt::print("Fine system matrix shape = {} x {}\n", 2 * r * r,
+              2 * r * r + r);
+
+  fmt::print("DLR rank squared = {}\n", r * r);
+  fmt::print("System matrix size = {} x {}\n\n", kmat.shape(0), kmat.shape(1));
+
+  // Get fermionic and bosonic DLR grids
+  auto ifops_fer = imfreq_ops(lambda, dlr_rf, Fermion);
+  auto ifops_bos = imfreq_ops(lambda, dlr_rf, Boson);
+  auto dlr_if_fer = ifops_fer.get_ifnodes();
+  auto dlr_if_bos = ifops_bos.get_ifnodes();
+
+  // Evaluate Green's function on 1D DLR grid and obtain its DLR coefficients
+  std::complex<double> nu1 = 0, nu2 = 0;
+  auto g = nda::vector<dcomplex>(r);
+  auto gr = nda::vector<dcomplex>(r); // G reversed: G(-i nu_n)
+  for (int k = 0; k < r; ++k) {
+    nu1 = (2 * dlr_if_fer(k) + 1) * pi * 1i / beta;
+    g(k) = g_fun(u, nu1);
+    gr(k) = g_fun(u, -nu1);
+  }
+  auto gc = nda::array<dcomplex, 1>(ifops_fer.vals2coefs(beta, g));
+  auto grc = nda::array<dcomplex, 1>(ifops_fer.vals2coefs(beta, gr));
+
+  // Evaluate correlation and vertex functions on 2D DLR grid and obtain DLR
+  // coefficients
+  auto chi_s = nda::vector<dcomplex>(niom);
+  auto chi_d = nda::vector<dcomplex>(niom);
+  auto chi_m = nda::vector<dcomplex>(niom);
+  auto lam_s = nda::vector<dcomplex>(niom);
+  auto lam_d = nda::vector<dcomplex>(niom);
+  auto lam_m = nda::vector<dcomplex>(niom);
+  for (int k = 0; k < niom; ++k) {
+    nu1 = (2 * dlr2d_if(k, 0) + 1) * pi * 1i / beta;
+    nu2 = (2 * dlr2d_if(k, 1) + 1) * pi * 1i / beta;
+    chi_s(k) = chi_s_fun(u, beta, nu1, nu2);
+    lam_s(k) = lam_s_fun(u, beta, nu1, nu2);
+  }
+  for (int k = 0; k < niom; ++k) {
+    nu1 = (2 * dlr2d_if_ph(k, 0) + 1) * pi * 1i / beta;
+    nu2 = (2 * dlr2d_if_ph(k, 1) + 1) * pi * 1i / beta;
+    chi_d(k) = chi_d_fun(u, beta, nu1, nu2);
+    chi_m(k) = chi_m_fun(u, beta, nu1, nu2);
+    lam_d(k) = lam_d_fun(u, beta, nu1, nu2);
+    lam_m(k) = lam_m_fun(u, beta, nu1, nu2);
+  }
+
+  fmt::print("Obtaining DLR coefficients of chi, lambda...\n");
+  auto chi_s_c = nda::array<dcomplex, 3>();
+  auto chi_d_c = nda::array<dcomplex, 3>();
+  auto chi_m_c = nda::array<dcomplex, 3>();
+  auto lam_s_c = nda::array<dcomplex, 3>();
+  auto lam_d_c = nda::array<dcomplex, 3>();
+  auto lam_m_c = nda::array<dcomplex, 3>();
+  auto chi_s_csing = nda::array<dcomplex, 1>();
+  auto chi_d_csing = nda::array<dcomplex, 1>();
+  auto chi_m_csing = nda::array<dcomplex, 1>();
+  auto lam_s_csing = nda::array<dcomplex, 1>();
+  auto lam_d_csing = nda::array<dcomplex, 1>();
+  auto lam_m_csing = nda::array<dcomplex, 1>();
+
+  auto start = std::chrono::high_resolution_clock::now();
+  auto valsall = nda::array<dcomplex, 2, F_layout>(niom, 6);
+  valsall(_, 0) = chi_s;
+  valsall(_, 1) = chi_d;
+  valsall(_, 2) = chi_m;
+  valsall(_, 3) = lam_s;
+  valsall(_, 4) = lam_d;
+  valsall(_, 5) = lam_m;
+
+  auto [coefsall, coefsingall] = dlr2d_vals2coefs_many_two_terms(kmat, valsall, r);
+
+  chi_s_c = coefsall(0, _, _, _);
+  chi_d_c = coefsall(1, _, _, _);
+  chi_m_c = coefsall(2, _, _, _);
+  lam_s_c = coefsall(3, _, _, _);
+  lam_d_c = coefsall(4, _, _, _);
+  lam_m_c = coefsall(5, _, _, _);
+  chi_s_csing = coefsingall(0, _);
+  chi_d_csing = coefsingall(1, _);
+  chi_m_csing = coefsingall(2, _);
+  lam_s_csing = coefsingall(3, _);
+  lam_d_csing = coefsingall(4, _);
+  lam_m_csing = coefsingall(5, _);
+  auto end = std::chrono::high_resolution_clock::now();
+  fmt::print("Time: {}\n", std::chrono::duration<double>(end - start).count());
+
+  // Test DLR expansion of vertex function
+  fmt::print("Testing DLR expansion of vertex function...\n");
+
+  // Evaluate expansion on test grid and measure error
+  auto chi_s_tst = nda::array<dcomplex, 2>(niomtst, niomtst);
+  auto chi_d_tst = nda::array<dcomplex, 2>(niomtst, niomtst);
+  auto chi_m_tst = nda::array<dcomplex, 2>(niomtst, niomtst);
+  auto chi_s_tru = nda::array<dcomplex, 2>(niomtst, niomtst);
+  auto chi_d_tru = nda::array<dcomplex, 2>(niomtst, niomtst);
+  auto chi_m_tru = nda::array<dcomplex, 2>(niomtst, niomtst);
+  auto lam_s_tst = nda::array<dcomplex, 2>(niomtst, niomtst);
+  auto lam_d_tst = nda::array<dcomplex, 2>(niomtst, niomtst);
+  auto lam_m_tst = nda::array<dcomplex, 2>(niomtst, niomtst);
+  auto lam_s_tru = nda::array<dcomplex, 2>(niomtst, niomtst);
+  auto lam_d_tru = nda::array<dcomplex, 2>(niomtst, niomtst);
+  auto lam_m_tru = nda::array<dcomplex, 2>(niomtst, niomtst);
+  int midx = 0, nidx = 0;
+  start = std::chrono::high_resolution_clock::now();
+  for (int m = -niomtst / 2; m < niomtst / 2; ++m) {
+    for (int n = -niomtst / 2; n < niomtst / 2; ++n) {
+      nu1 = ((2 * m + 1) * pi * 1i) / beta;
+      nu2 = ((2 * n + 1) * pi * 1i) / beta;
+      midx = niomtst / 2 + m;
+      nidx = niomtst / 2 + n;
+
+      // Evaluate true functions
+      chi_s_tru(midx, nidx) = chi_s_fun(u, beta, nu1, nu2);
+      chi_d_tru(midx, nidx) = chi_d_fun(u, beta, nu1, nu2);
+      chi_m_tru(midx, nidx) = chi_m_fun(u, beta, nu1, nu2);
+      lam_s_tru(midx, nidx) = lam_s_fun(u, beta, nu1, nu2);
+      lam_d_tru(midx, nidx) = lam_d_fun(u, beta, nu1, nu2);
+      lam_m_tru(midx, nidx) = lam_m_fun(u, beta, nu1, nu2);
+
+      // Evaluate DLR expansions
+      chi_s_tst(midx, nidx) =
+          dlr2d_coefs2eval_two_terms(beta, dlr_rf, chi_s_c, chi_s_csing, m, n, 1);
+      chi_d_tst(midx, nidx) =
+          dlr2d_coefs2eval_two_terms(beta, dlr_rf, chi_d_c, chi_d_csing, m, n, 2);
+      chi_m_tst(midx, nidx) =
+          dlr2d_coefs2eval_two_terms(beta, dlr_rf, chi_m_c, chi_m_csing, m, n, 2);
+      lam_s_tst(midx, nidx) =
+          dlr2d_coefs2eval_two_terms(beta, dlr_rf, lam_s_c, lam_s_csing, m, n, 1);
+      lam_d_tst(midx, nidx) =
+          dlr2d_coefs2eval_two_terms(beta, dlr_rf, lam_d_c, lam_d_csing, m, n, 2);
+      lam_m_tst(midx, nidx) =
+          dlr2d_coefs2eval_two_terms(beta, dlr_rf, lam_m_c, lam_m_csing, m, n, 2);
+    }
+  }
+  end = std::chrono::high_resolution_clock::now();
+  fmt::print("Time: {}\n\n",
+             std::chrono::duration<double>(end - start).count());
+
+  double chi_s_l2 = sqrt(sum(pow(abs(chi_s_tru), 2))) / beta / beta;
+  double chi_d_l2 = sqrt(sum(pow(abs(chi_d_tru), 2))) / beta / beta;
+  double chi_m_l2 = sqrt(sum(pow(abs(chi_m_tru), 2))) / beta / beta;
+  double lam_s_l2 = sqrt(sum(pow(abs(lam_s_tru), 2))) / beta / beta;
+  double lam_d_l2 = sqrt(sum(pow(abs(lam_d_tru), 2))) / beta / beta;
+  double lam_m_l2 = sqrt(sum(pow(abs(lam_m_tru), 2))) / beta / beta;
+
+  double chi_s_linf = max_element(abs(chi_s_tru));
+  double chi_d_linf = max_element(abs(chi_d_tru));
+  double chi_m_linf = max_element(abs(chi_m_tru));
+  double lam_s_linf = max_element(abs(lam_s_tru));
+  double lam_d_linf = max_element(abs(lam_d_tru));
+  double lam_m_linf = max_element(abs(lam_m_tru));
+
+  double chi_s_l2err =
+      sqrt(sum(pow(abs(chi_s_tru - chi_s_tst), 2))) / beta / beta;
+  double chi_d_l2err =
+      sqrt(sum(pow(abs(chi_d_tru - chi_d_tst), 2))) / beta / beta;
+  double chi_m_l2err =
+      sqrt(sum(pow(abs(chi_m_tru - chi_m_tst), 2))) / beta / beta;
+  double lam_s_l2err =
+      sqrt(sum(pow(abs(lam_s_tru - lam_s_tst), 2))) / beta / beta;
+  double lam_d_l2err =
+      sqrt(sum(pow(abs(lam_d_tru - lam_d_tst), 2))) / beta / beta;
+  double lam_m_l2err =
+      sqrt(sum(pow(abs(lam_m_tru - lam_m_tst), 2))) / beta / beta;
+
+  double chi_s_linferr = max_element(abs(chi_s_tru - chi_s_tst));
+  double chi_d_linferr = max_element(abs(chi_d_tru - chi_d_tst));
+  double chi_m_linferr = max_element(abs(chi_m_tru - chi_m_tst));
+  double lam_s_linferr = max_element(abs(lam_s_tru - lam_s_tst));
+  double lam_d_linferr = max_element(abs(lam_d_tru - lam_d_tst));
+  double lam_m_linferr = max_element(abs(lam_m_tru - lam_m_tst));
+
+  fmt::print("--- chi_S results ---\n");
+  fmt::print("L2 norm:    {}\n", chi_s_l2);
+  fmt::print("Linf norm:  {}\n", chi_s_linf);
+  fmt::print("L2 error:   {}\n", chi_s_l2err);
+  fmt::print("Linf error: {}\n\n", chi_s_linferr);
+
+  fmt::print("--- chi_D results ---\n");
+  fmt::print("L2 norm:    {}\n", chi_d_l2);
+  fmt::print("Linf norm:  {}\n", chi_d_linf);
+  fmt::print("L2 error:   {}\n", chi_d_l2err);
+  fmt::print("Linf error: {}\n\n", chi_d_linferr);
+
+  fmt::print("--- chi_M results ---\n");
+  fmt::print("L2 norm:    {}\n", chi_m_l2);
+  fmt::print("Linf norm:  {}\n", chi_m_linf);
+  fmt::print("L2 error:   {}\n", chi_m_l2err);
+  fmt::print("Linf error: {}\n\n", chi_m_linferr);
+
+  fmt::print("--- lambda_S results ---\n");
+  fmt::print("L2 norm:    {}\n", lam_s_l2);
+  fmt::print("Linf norm:  {}\n", lam_s_linf);
+  fmt::print("L2 error:   {}\n", lam_s_l2err);
+  fmt::print("Linf error: {}\n\n", lam_s_linferr);
+
+  fmt::print("--- lambda_D results ---\n");
+  fmt::print("L2 norm:    {}\n", lam_d_l2);
+  fmt::print("Linf norm:  {}\n", lam_d_linf);
+  fmt::print("L2 error:   {}\n", lam_d_l2err);
+  fmt::print("Linf error: {}\n\n", lam_d_linferr);
+
+  fmt::print("--- lambda_M results ---\n");
+  fmt::print("L2 norm:    {}\n", lam_m_l2);
+  fmt::print("Linf norm:  {}\n", lam_m_linf);
+  fmt::print("L2 error:   {}\n", lam_m_l2err);
+  fmt::print("Linf error: {}\n\n", lam_m_linferr);
+
+  // Compute polarization from DLR expansions
+  auto itops = imtime_ops(lambda, dlr_rf);
+
+  // auto pol_s =
+  //     polarization(beta, ifops_fer, ifops_bos, gc, gc, lam_s_c, lam_s_csing);
+  // pol_s += polarization_const(beta, itops, ifops_bos, gc, gc);
+  auto pol_s = polarization_new(beta, lambda, eps, itops, ifops_fer, ifops_bos,
+                                gc, gc, lam_s_c, lam_s_csing);
+  pol_s *= -1.0 / 2;
+
+  // auto pol_d =
+  //     polarization(beta, ifops_fer, ifops_bos, grc, gc, lam_d_c,
+  //     lam_d_csing);
+  // pol_d += polarization_const(beta, itops, ifops_bos, grc, gc);
+  auto pol_d = polarization_new(beta, lambda, eps, itops, ifops_fer, ifops_bos,
+                                grc, gc, lam_d_c, lam_d_csing);
+
+  // auto pol_m =
+  //     polarization(beta, ifops_fer, ifops_bos, grc, gc, lam_m_c,
+  //     lam_m_csing);
+  // pol_m += polarization_const(beta, itops, ifops_bos, grc, gc);
+  auto pol_m = polarization_new(beta, lambda, eps, itops, ifops_fer, ifops_bos,
+                                grc, gc, lam_m_c, lam_m_csing);
+
+  auto pol_s_c = ifops_bos.vals2coefs(beta, pol_s); // DLR expansion
+  auto pol_d_c = ifops_bos.vals2coefs(beta, pol_d);
+  auto pol_m_c = ifops_bos.vals2coefs(beta, pol_m);
+
+  // Compute true polarization
+  std::complex<double> pol0_s_tru =
+      beta * -k_it(0.0, -u / 2, beta) /
+      (2 * beta * u * -k_it(0.0, -u / 2, beta) - 4);
+  std::complex<double> pol0_d_tru = beta * -k_it(0.0, -u / 2, beta) /
+                                    (beta * u * -k_it(0.0, -u / 2, beta) - 2);
+  std::complex<double> pol0_m_tru = beta * -k_it(0.0, u / 2, beta) /
+                                    (-beta * u * -k_it(0.0, u / 2, beta) - 2);
+
+  // Evaluate polarization on dense grid
+  auto pol_s_tst = nda::vector<dcomplex>(nbos_tst);
+  auto pol_d_tst = nda::vector<dcomplex>(nbos_tst);
+  auto pol_m_tst = nda::vector<dcomplex>(nbos_tst);
+  auto pol_s_tru = nda::vector<dcomplex>(nbos_tst);
+  auto pol_d_tru = nda::vector<dcomplex>(nbos_tst);
+  auto pol_m_tru = nda::vector<dcomplex>(nbos_tst);
+  for (int n = -nbos_tst / 2; n < nbos_tst / 2; ++n) {
+    pol_s_tst(n + nbos_tst / 2) = ifops_bos.coefs2eval(beta, pol_s_c, n);
+    pol_d_tst(n + nbos_tst / 2) = ifops_bos.coefs2eval(beta, pol_d_c, n);
+    pol_m_tst(n + nbos_tst / 2) = ifops_bos.coefs2eval(beta, pol_m_c, n);
+
+    if (n == 0) {
+      pol_s_tru(n + nbos_tst / 2) = pol0_s_tru;
+      pol_d_tru(n + nbos_tst / 2) = pol0_d_tru;
+      pol_m_tru(n + nbos_tst / 2) = pol0_m_tru;
+    } else {
+      pol_s_tru(n + nbos_tst / 2) = 0;
+      pol_d_tru(n + nbos_tst / 2) = 0;
+      pol_m_tru(n + nbos_tst / 2) = 0;
+    }
+  }
+
+  double pol_s_l2 = sqrt(sum(pow(abs(pol_s_tru), 2))) / beta;
+  double pol_d_l2 = sqrt(sum(pow(abs(pol_d_tru), 2))) / beta;
+  double pol_m_l2 = sqrt(sum(pow(abs(pol_m_tru), 2))) / beta;
+
+  double pol_s_linf = max_element(abs(pol_s_tru));
+  double pol_d_linf = max_element(abs(pol_d_tru));
+  double pol_m_linf = max_element(abs(pol_m_tru));
+
+  double pol_s_l2err = sqrt(sum(pow(abs(pol_s_tru - pol_s_tst), 2))) / beta;
+  double pol_d_l2err = sqrt(sum(pow(abs(pol_d_tru - pol_d_tst), 2))) / beta;
+  double pol_m_l2err = sqrt(sum(pow(abs(pol_m_tru - pol_m_tst), 2))) / beta;
+
+  double pol_s_linferr = max_element(abs(pol_s_tru - pol_s_tst));
+  double pol_d_linferr = max_element(abs(pol_d_tru - pol_d_tst));
+  double pol_m_linferr = max_element(abs(pol_m_tru - pol_m_tst));
+
+  fmt::print("--- pol_s results ---\n");
+  fmt::print("L2 norm:    {}\n", pol_s_l2);
+  fmt::print("Linf norm:  {}\n", pol_s_linf);
+  fmt::print("L2 error:   {}\n", pol_s_l2err);
+  fmt::print("Linf error: {}\n\n", pol_s_linferr);
+
+  fmt::print("--- pol_d results ---\n");
+  fmt::print("L2 norm:    {}\n", pol_d_l2);
+  fmt::print("Linf norm:  {}\n", pol_d_linf);
+  fmt::print("L2 error:   {}\n", pol_d_l2err);
+  fmt::print("Linf error: {}\n\n", pol_d_linferr);
+
+  fmt::print("--- pol_m results ---\n");
+  fmt::print("L2 norm:    {}\n", pol_m_l2);
+  fmt::print("Linf norm:  {}\n", pol_m_linf);
+  fmt::print("L2 error:   {}\n", pol_m_l2err);
+  fmt::print("Linf error: {}\n\n", pol_m_linferr);
+
+}
+
 // NOTE: for now, unfortunately, nu means i*nu; change this in the future
 
 std::complex<double> g_fun(double u, std::complex<double> nu) {

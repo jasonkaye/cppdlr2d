@@ -33,6 +33,9 @@ nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
                                      bool reduced, bool compressbasis,
                                      int niom_dense = 0);
 
+void hubatom_allfuncs_two_terms(double beta, double u, double lambda,
+                                     double eps, int niomtst, int nbos_tst);
+
 /*!
  * \defgroup HubSolns
  * \brief Analytical solutions for the Hubbard atom example
