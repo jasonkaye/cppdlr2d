@@ -758,7 +758,7 @@ dlr2d_vals2coefs_two_terms(nda::matrix<dcomplex, F_layout> kmat,
 
   auto coefreg = nda::array<dcomplex, 3>(2, r, r);
   auto coefsng = nda::array<dcomplex, 1>(r);
-  reshape(coefreg, 3 * r * r) = tmp(nda::range(2 * r * r));
+  reshape(coefreg, 2 * r * r) = tmp(nda::range(2 * r * r));
   coefsng = tmp(nda::range(2 * r * r, 2 * r * r + r));
 
   return {coefreg, coefsng};
