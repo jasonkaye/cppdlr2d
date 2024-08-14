@@ -7,6 +7,7 @@
 
 using namespace cppdlr;
 using namespace std::numbers;
+using namespace dlr2d;
 
 /*!
  * \brief Test DLR expansion of density correlation function, singlet vertex
@@ -40,7 +41,7 @@ TEST(hubatom, main) {
   dlr2d_if_ph(_, 0) = -dlr2d_if(_, 0) - 1;
   dlr2d_if_ph(_, 1) = dlr2d_if(_, 1);
 
-  auto kmat = get_kmat(beta, dlr_rf, dlr2d_if);
+  auto kmat = build_coefs2vals_if(beta, dlr_rf, dlr2d_if);
   fmt::print("Fine system matrix shape = {} x {}\n", 3 * r * r + r,
              3 * r * r + r);
 
@@ -87,8 +88,8 @@ TEST(hubatom, main) {
 
   auto start = std::chrono::high_resolution_clock::now();
 
-  auto [chi_d_c, chi_d_csing] = dlr2d_vals2coefs(kmat, chi_d, r);
-  auto [lam_s_c, lam_s_csing] = dlr2d_vals2coefs(kmat, lam_s, r);
+  auto [chi_d_c, chi_d_csing] = vals2coefs_if(kmat, chi_d, r);
+  auto [lam_s_c, lam_s_csing] = vals2coefs_if(kmat, lam_s, r);
 
   auto end = std::chrono::high_resolution_clock::now();
   fmt::print("Time: {}\n", std::chrono::duration<double>(end - start).count());
@@ -116,9 +117,9 @@ TEST(hubatom, main) {
 
       // Evaluate DLR expansions
       chi_d_tst(midx, nidx) =
-          dlr2d_coefs2eval(beta, dlr_rf, chi_d_c, chi_d_csing, m, n, 2);
+          coefs2eval_if(beta, dlr_rf, chi_d_c, chi_d_csing, m, n, 2);
       lam_s_tst(midx, nidx) =
-          dlr2d_coefs2eval(beta, dlr_rf, lam_s_c, lam_s_csing, m, n, 1);
+          coefs2eval_if(beta, dlr_rf, lam_s_c, lam_s_csing, m, n, 1);
     }
   }
   end = std::chrono::high_resolution_clock::now();

@@ -1,5 +1,7 @@
 #include "hubatom.hpp"
 
+using namespace dlr2d;
+
 int main() {
   double beta = 64;     // Inverse temperature
   double u = 1.0;       // Interaction

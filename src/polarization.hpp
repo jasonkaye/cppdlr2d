@@ -2,6 +2,8 @@
 #include "nda/nda.hpp"
 #include <cppdlr/cppdlr.hpp>
 
+namespace dlr2d {
+
 // Compute polarization
 nda::vector<dcomplex>
 polarization(double beta, cppdlr::imfreq_ops const &ifops_fer,
@@ -39,3 +41,5 @@ polarization_new(double beta, double lambda, double eps, cppdlr::imtime_ops cons
                  nda::array_const_view<dcomplex, 1> gc,
                  nda::array_const_view<dcomplex, 3> lambc,
                  nda::array_const_view<dcomplex, 1> lambc_sing);
+
+} // namespace dlr2d

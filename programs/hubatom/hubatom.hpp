@@ -3,7 +3,11 @@
  *\brief Header file for Hubbard atom example
  */
 
+#include "../../src/dlr2d.hpp"
+#include "../../src/polarization.hpp"
 #include <cppdlr/cppdlr.hpp>
+
+using namespace dlr2d;
 
 /*!
  * \brief Driver function for Hubbard atom example, all functions

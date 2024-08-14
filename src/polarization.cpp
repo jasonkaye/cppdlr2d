@@ -7,6 +7,8 @@ using namespace cppdlr;
 using namespace nda;
 using namespace std::numbers;
 
+namespace dlr2d {
+
 // Compute polarization
 
 nda::vector<dcomplex>
@@ -370,7 +372,7 @@ polarization(double beta, imfreq_ops const &ifops_fer,
     // f(k) = hubbg(u, nu1) * hubbg(u, -nu1) * hubbvert(u, beta, nu1, -nu1);
     f(k) = ifops_fer.coefs2eval(beta, gc, dlr_if_fer(k)) *
            ifops_fer.coefs2eval(beta, gc, -dlr_if_fer(k) - 1) *
-           dlr2d_coefs2eval(beta, dlr_rf, lambc, lambc_sing, dlr_if_fer(k),
+           coefs2eval_if(beta, dlr_rf, lambc, lambc_sing, dlr_if_fer(k),
                             -dlr_if_fer(k) - 1, channel);
   }
 
@@ -772,7 +774,7 @@ polarization(double beta, imfreq_ops const &ifops_fer,
     // h(k) = hubbg(u, nu1) * hubbg(u, -nu1) * hubbvert(u, beta, nu1, -nu1);
     h(k) = ifops_fer.coefs2eval(beta, fc, dlr_if_fer(k)) *
            ifops_fer.coefs2eval(beta, gc, -dlr_if_fer(k) - 1) *
-           dlr2d_coefs2eval(beta, dlr_rf, lambc, lambc_sing, dlr_if_fer(k),
+           coefs2eval_if(beta, dlr_rf, lambc, lambc_sing, dlr_if_fer(k),
                             -dlr_if_fer(k) - 1, channel);
   }
 
@@ -1126,3 +1128,5 @@ polarization_new(double beta, double lambda, double eps, cppdlr::imtime_ops cons
 // 
 // 
 // }
+
+} // namespace dlr2d

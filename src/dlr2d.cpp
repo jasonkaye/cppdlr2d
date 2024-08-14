@@ -12,6 +12,8 @@ using namespace cppdlr;
 using namespace nda;
 using namespace std::numbers;
 
+namespace dlr2d {
+
 std::complex<double> ker(std::complex<double> nu, double om) {
   return 1.0 / (nu - om);
 }
@@ -40,8 +42,9 @@ std::tuple<int, int> ind2sub_c(int idx, int n) {
 
 // Obtain 2D DLR nodes
 
-void get_dlr2d_if(nda::vector<double> dlr_rf, int niom_dense, double eps,
-                  std::string path, std::string filename) {
+void build_dlr2d_if_fullgrid(nda::vector<double> dlr_rf, int niom_dense,
+                             double eps, std::string path,
+                             std::string filename) {
 
   int r = dlr_rf.size();
 
@@ -147,10 +150,9 @@ read_dlr2d_rfif(std::string path, std::string filename) {
 
 // Obtain 2D DLR nodes using reduced fine grid, mixed fermionic/bosonic
 // representation three regular terms and one singular term
-void get_dlr2d_if_reduced(nda::vector<double> dlr_rf,
-                          nda::vector<int> dlr_if_fer,
-                          nda::vector<int> dlr_if_bos, double eps,
-                          std::string path, std::string filename) {
+void build_dlr2d_if(nda::vector<double> dlr_rf, nda::vector<int> dlr_if_fer,
+                    nda::vector<int> dlr_if_bos, double eps, std::string path,
+                    std::string filename) {
 
   int rankmethod = 1;
 
@@ -274,7 +276,7 @@ void get_dlr2d_if_reduced(nda::vector<double> dlr_rf,
 
 // Obtain 2D DLR nodes using reduced fine grid, mixed fermionic/bosonic
 // representation, two terms
-void get_dlr2d_if_reduced_two_terms(nda::vector<double> dlr_rf,
+void build_dlr2d_if_3term(nda::vector<double> dlr_rf,
                           nda::vector<int> dlr_if_fer,
                           nda::vector<int> dlr_if_bos, double eps,
                           std::string path, std::string filename) {
@@ -293,8 +295,7 @@ void get_dlr2d_if_reduced_two_terms(nda::vector<double> dlr_rf,
           1; // nu1 = 2*n_k*i*pi - (2*m_j+1)*i*pi = (2*(n_k-m_j-1)+1)*i*pi
       nu2didx(m * r + n, 1) = dlr_if_fer(m); // nu2 = (2*m_j + 1)*i*pi
 
-      nu2didx(r * r + m * r + n, 0) =
-          dlr_if_fer(m); // nu1 = (2*m_j + 1)*i*pi
+      nu2didx(r * r + m * r + n, 0) = dlr_if_fer(m); // nu1 = (2*m_j + 1)*i*pi
       nu2didx(r * r + m * r + n, 1) =
           dlr_if_bos(n) - dlr_if_fer(m) -
           1; // nu2 = 2*n_k*i*pi - (2*m_j+1)*i*pi = (2*(n_k-m_j-1)+1)*i*pi
@@ -352,7 +353,7 @@ void get_dlr2d_if_reduced_two_terms(nda::vector<double> dlr_rf,
   }
 
   fmt::print("Fine system matrix shape = {} x {}\n", kmat.shape(0),
-            kmat.shape(1));
+             kmat.shape(1));
 
   // Pivoted QR to determine sampling nodes
   auto kmatt = nda::matrix<dcomplex, F_layout>(transpose(kmat));
@@ -398,11 +399,10 @@ void get_dlr2d_if_reduced_two_terms(nda::vector<double> dlr_rf,
   fmt::print("System matrix rank = {}\n\n", niom_skel);
 }
 
-
 // Obtain 2D DLR nodes using reduced fine grid, recompression of basis
-void get_dlr2d_rfif(nda::vector<double> dlr_rf, nda::vector<int> dlr_if_fer,
-                    nda::vector<int> dlr_if_bos, double eps, std::string path,
-                    std::string filename) {
+void build_dlr2d_ifrf(nda::vector<double> dlr_rf, nda::vector<int> dlr_if_fer,
+                      nda::vector<int> dlr_if_bos, double eps, std::string path,
+                      std::string filename) {
 
   int rankmethod = 1;
 
@@ -556,8 +556,9 @@ void get_dlr2d_rfif(nda::vector<double> dlr_rf, nda::vector<int> dlr_if_fer,
   fmt::print("System matrix rank = {}\n\n", r2d);
 }
 
-nda::matrix<dcomplex, F_layout>
-get_kmat(double beta, nda::vector<double> dlr_rf, nda::array<int, 2> dlr2d_if) {
+nda::matrix<dcomplex, F_layout> build_coefs2vals_if(double beta,
+                                                 nda::vector<double> dlr_rf,
+                                                 nda::array<int, 2> dlr2d_if) {
 
   int r = dlr_rf.size();
   int niom_skel = dlr2d_if.shape(0);
@@ -618,7 +619,8 @@ get_kmat(double beta, nda::vector<double> dlr_rf, nda::array<int, 2> dlr2d_if) {
 
 // two terms K matrix
 nda::matrix<dcomplex, F_layout>
-get_kmat_two_terms(double beta, nda::vector<double> dlr_rf, nda::array<int, 2> dlr2d_if) {
+build_coefs2vals_if_3term(double beta, nda::vector<double> dlr_rf,
+                       nda::array<int, 2> dlr2d_if) {
 
   int r = dlr_rf.size();
   int niom_skel = dlr2d_if.shape(0);
@@ -660,9 +662,9 @@ get_kmat_two_terms(double beta, nda::vector<double> dlr_rf, nda::array<int, 2> d
 }
 
 nda::matrix<dcomplex, F_layout>
-get_kmat_compressed(double beta, nda::vector<double> dlr_rf,
-                    nda::array<int, 2> dlr2d_rfidx,
-                    nda::array<int, 2> dlr2d_if) {
+build_coefs2vals_if_square(double beta, nda::vector<double> dlr_rf,
+                        nda::array<int, 2> dlr2d_rfidx,
+                        nda::array<int, 2> dlr2d_if) {
 
   int r = dlr_rf.size();
   int r2d = dlr2d_if.shape(0);
@@ -695,8 +697,8 @@ get_kmat_compressed(double beta, nda::vector<double> dlr_rf,
 }
 
 nda::array<dcomplex, 1>
-dlr2d_vals2coefs_compressed(nda::matrix<dcomplex, F_layout> kmat,
-                            nda::vector_const_view<dcomplex> vals) {
+vals2coefs_if_square(nda::matrix<dcomplex, F_layout> kmat,
+                  nda::vector_const_view<dcomplex> vals) {
 
   int r2d = vals.size();
   auto coef = nda::array<dcomplex, 1>(r2d);
@@ -710,8 +712,8 @@ dlr2d_vals2coefs_compressed(nda::matrix<dcomplex, F_layout> kmat,
 }
 
 std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>>
-dlr2d_vals2coefs(nda::matrix<dcomplex, F_layout> kmat,
-                 nda::vector_const_view<dcomplex> vals, int r) {
+vals2coefs_if(nda::matrix<dcomplex, F_layout> kmat,
+           nda::vector_const_view<dcomplex> vals, int r) {
 
   int m = vals.size();
   int n = 3 * r * r + r;
@@ -743,7 +745,7 @@ dlr2d_vals2coefs(nda::matrix<dcomplex, F_layout> kmat,
 }
 
 std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>>
-dlr2d_vals2coefs_two_terms(nda::matrix<dcomplex, F_layout> kmat,
+vals2coefs_if_3term(nda::matrix<dcomplex, F_layout> kmat,
                  nda::vector_const_view<dcomplex> vals, int r) {
 
   int m = vals.size();
@@ -755,7 +757,6 @@ dlr2d_vals2coefs_two_terms(nda::matrix<dcomplex, F_layout> kmat,
   int rank = 0;                    // Rank (not needed)
   nda::lapack::gelss(kmat, tmp, s, 0.0, rank);
 
-
   auto coefreg = nda::array<dcomplex, 3>(2, r, r);
   auto coefsng = nda::array<dcomplex, 1>(r);
   reshape(coefreg, 2 * r * r) = tmp(nda::range(2 * r * r));
@@ -765,9 +766,8 @@ dlr2d_vals2coefs_two_terms(nda::matrix<dcomplex, F_layout> kmat,
 }
 
 std::tuple<nda::array<dcomplex, 4>, nda::array<dcomplex, 2>>
-dlr2d_vals2coefs_many(nda::matrix<dcomplex, F_layout> kmat,
-                      nda::array_const_view<dcomplex, 2, F_layout> vals,
-                      int r) {
+vals2coefs_if_many(nda::matrix<dcomplex, F_layout> kmat,
+                nda::array_const_view<dcomplex, 2, F_layout> vals, int r) {
 
   int m = vals.shape(0);
   int nrhs = vals.shape(1);
@@ -791,7 +791,7 @@ dlr2d_vals2coefs_many(nda::matrix<dcomplex, F_layout> kmat,
 }
 
 std::tuple<nda::array<dcomplex, 4>, nda::array<dcomplex, 2>>
-dlr2d_vals2coefs_many_two_terms(nda::matrix<dcomplex, F_layout> kmat,
+vals2coefs_if_many_3term(nda::matrix<dcomplex, F_layout> kmat,
                       nda::array_const_view<dcomplex, 2, F_layout> vals,
                       int r) {
 
@@ -818,11 +818,10 @@ dlr2d_vals2coefs_many_two_terms(nda::matrix<dcomplex, F_layout> kmat,
 
 // Evaluate 2D DLR expansion
 // Channel = 1 for particle-particle, = 2 for particle-hole
-std::complex<double>
-dlr2d_coefs2eval(double beta, nda::vector<double> dlr_rf,
-                 nda::array_const_view<dcomplex, 3> gc,
-                 nda::array_const_view<dcomplex, 1> gc_sing, int m, int n,
-                 int channel) {
+std::complex<double> coefs2eval_if(double beta, nda::vector<double> dlr_rf,
+                                nda::array_const_view<dcomplex, 3> gc,
+                                nda::array_const_view<dcomplex, 1> gc_sing,
+                                int m, int n, int channel) {
 
   int r = dlr_rf.size(); // # DLR basis functions
 
@@ -892,7 +891,7 @@ dlr2d_coefs2eval(double beta, nda::vector<double> dlr_rf,
 // Evaluate 2D DLR expansion with two terms
 // Channel = 1 for particle-particle, = 2 for particle-hole
 std::complex<double>
-dlr2d_coefs2eval_two_terms(double beta, nda::vector<double> dlr_rf,
+coefs2eval_if_3term(double beta, nda::vector<double> dlr_rf,
                  nda::array_const_view<dcomplex, 3> gc,
                  nda::array_const_view<dcomplex, 1> gc_sing, int m, int n,
                  int channel) {
@@ -929,7 +928,7 @@ dlr2d_coefs2eval_two_terms(double beta, nda::vector<double> dlr_rf,
 
   // Evaluate DLR expansion
   auto g = beta * beta *
-            (nda::blas::dot(kfn, matvecmul(gc(0, _, _), kb)) +
+           (nda::blas::dot(kfn, matvecmul(gc(0, _, _), kb)) +
             nda::blas::dot(kfm, matvecmul(gc(1, _, _), kb)));
 
   if (mm + n + 1 == 0) {
@@ -973,10 +972,11 @@ std::string get_filename(double lambda, double eps, bool compressed) {
   std::ostringstream filenameStream;
   if (!compressed) {
     filenameStream << "dlr2d_if_reduced_" << lambda << "_" << std::scientific
-                 << std::setprecision(2) << eps << ".h5";
+                   << std::setprecision(2) << eps << ".h5";
   } else {
     filenameStream << "dlr2d_if_reduced_" << lambda << "_" << std::scientific
-                 << std::setprecision(2) << eps << "_compressed" << ".h5";
+                   << std::setprecision(2) << eps << "_compressed"
+                   << ".h5";
   }
   return filenameStream.str();
 }
@@ -985,7 +985,7 @@ std::string get_filename_two_terms(double lambda, double eps) {
 
   std::ostringstream filenameStream;
   filenameStream << "dlr2d_if_reduced_" << lambda << "_" << std::scientific
-               << std::setprecision(2) << eps << "_two_terms.h5";
+                 << std::setprecision(2) << eps << "_two_terms.h5";
 
   return filenameStream.str();
 }
@@ -1097,3 +1097,5 @@ nda::vector<int> get_dlr_if_boson(double lambda,
 
   return dlr_if_boson;
 }
+
+} // namespace dlr2d

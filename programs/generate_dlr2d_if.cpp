@@ -3,6 +3,7 @@
 #include <fmt/format.h>
 
 using namespace cppdlr;
+using namespace dlr2d;
 
 void generate_dlr2d_if_driver(nda::vector<double> lambdas, double eps,
                               nda::vector<int> nioms_dense, bool reduced,
@@ -38,15 +39,14 @@ void generate_dlr2d_if_driver(nda::vector<double> lambdas, double eps,
       fmt::print("Fine grid system matrix shape = {} x {}\n",
                  niom_dense * niom_dense, 3 * r * r + r);
       auto filename = get_filename(lambda, eps, niom_dense);
-      get_dlr2d_if(dlr_rf, niom_dense, eps, path, filename);
+      build_dlr2d_if_fullgrid(dlr_rf, niom_dense, eps, path, filename);
     } else {
       fmt::print("System matrix shape = {} x {}\n", 3 * r * r, 3 * r * r + r);
       auto filename = get_filename(lambda, eps, compressbasis);
       if (!compressbasis) {
-        get_dlr2d_if_reduced(dlr_rf, dlr_if_fer, dlr_if_bos, eps, path,
-                             filename);
+        build_dlr2d_if(dlr_rf, dlr_if_fer, dlr_if_bos, eps, path, filename);
       } else {
-        get_dlr2d_rfif(dlr_rf, dlr_if_fer, dlr_if_bos, eps, path, filename);
+        build_dlr2d_ifrf(dlr_rf, dlr_if_fer, dlr_if_bos, eps, path, filename);
       }
     }
     auto end = std::chrono::high_resolution_clock::now();
@@ -83,8 +83,7 @@ void generate_dlr2d_if_two_terms_driver(nda::vector<double> lambdas, double eps,
     fmt::print("System matrix shape = {} x {}\n", 2 * r * r, 2 * r * r + r);
 
     auto filename = get_filename_two_terms(lambda, eps);
-    get_dlr2d_if_reduced_two_terms(dlr_rf, dlr_if_fer, dlr_if_bos, eps, path,
-                                   filename);
+    build_dlr2d_if_3term(dlr_rf, dlr_if_fer, dlr_if_bos, eps, path, filename);
 
     auto end = std::chrono::high_resolution_clock::now();
     fmt::print("Time: {}\n",
@@ -97,7 +96,7 @@ int main() {
   double eps = 1e-12;  // DLR tolerance
   bool reduced = true; // Full or reduced fine grid
   bool compressbasis = false;
-  bool two_terms = true; // 2+1 or 3+1-term 2D DLR
+  bool two_terms = true;              // 2+1 or 3+1-term 2D DLR
   auto path = "../../dlr2d_if_data/"; // Path for DLR 2D grid data
 
   // auto lambdas = nda::vector<double>(

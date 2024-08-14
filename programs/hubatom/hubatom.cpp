@@ -1,12 +1,11 @@
 #include "hubatom.hpp"
-#include "../../src/dlr2d.hpp"
-#include "../../src/polarization.hpp"
 #include <fmt/format.h>
 #include <fstream>
 #include <numbers>
 
 using namespace cppdlr;
 using namespace std::numbers;
+using namespace dlr2d;
 
 nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
                                      double eps, int niomtst, int nbos_tst,
@@ -47,9 +46,9 @@ nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
   // Build kernel matrix
   auto kmat = nda::matrix<dcomplex>();
   if (!compressbasis) {
-    kmat = get_kmat(beta, dlr_rf, dlr2d_if);
+    kmat = build_coefs2vals_if(beta, dlr_rf, dlr2d_if);
   } else {
-    kmat = get_kmat_compressed(beta, dlr_rf, dlr2d_rfidx, dlr2d_if);
+    kmat = build_coefs2vals_if_square(beta, dlr_rf, dlr2d_rfidx, dlr2d_if);
   }
   int niom = dlr2d_if.shape(0);
 
@@ -129,7 +128,7 @@ nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
     valsall(_, 4) = lam_d;
     valsall(_, 5) = lam_m;
 
-    auto [coefsall, coefsingall] = dlr2d_vals2coefs_many(kmat, valsall, r);
+    auto [coefsall, coefsingall] = vals2coefs_if_many(kmat, valsall, r);
 
     chi_s_c = coefsall(0, _, _, _);
     chi_d_c = coefsall(1, _, _, _);
@@ -145,12 +144,12 @@ nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
     lam_m_csing = coefsingall(5, _);
 
   } else {
-    auto chi_s_c_compressed = dlr2d_vals2coefs_compressed(kmat, chi_s);
-    auto chi_d_c_compressed = dlr2d_vals2coefs_compressed(kmat, chi_d);
-    auto chi_m_c_compressed = dlr2d_vals2coefs_compressed(kmat, chi_m);
-    auto lam_s_c_compressed = dlr2d_vals2coefs_compressed(kmat, lam_s);
-    auto lam_d_c_compressed = dlr2d_vals2coefs_compressed(kmat, lam_d);
-    auto lam_m_c_compressed = dlr2d_vals2coefs_compressed(kmat, lam_m);
+    auto chi_s_c_compressed = vals2coefs_if_square(kmat, chi_s);
+    auto chi_d_c_compressed = vals2coefs_if_square(kmat, chi_d);
+    auto chi_m_c_compressed = vals2coefs_if_square(kmat, chi_m);
+    auto lam_s_c_compressed = vals2coefs_if_square(kmat, lam_s);
+    auto lam_d_c_compressed = vals2coefs_if_square(kmat, lam_d);
+    auto lam_m_c_compressed = vals2coefs_if_square(kmat, lam_m);
 
     std::tie(chi_s_c, chi_s_csing) =
         uncompress_basis(r, dlr2d_rfidx, chi_s_c_compressed);
@@ -203,17 +202,17 @@ nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
 
       // Evaluate DLR expansions
       chi_s_tst(midx, nidx) =
-          dlr2d_coefs2eval(beta, dlr_rf, chi_s_c, chi_s_csing, m, n, 1);
+          coefs2eval_if(beta, dlr_rf, chi_s_c, chi_s_csing, m, n, 1);
       chi_d_tst(midx, nidx) =
-          dlr2d_coefs2eval(beta, dlr_rf, chi_d_c, chi_d_csing, m, n, 2);
+          coefs2eval_if(beta, dlr_rf, chi_d_c, chi_d_csing, m, n, 2);
       chi_m_tst(midx, nidx) =
-          dlr2d_coefs2eval(beta, dlr_rf, chi_m_c, chi_m_csing, m, n, 2);
+          coefs2eval_if(beta, dlr_rf, chi_m_c, chi_m_csing, m, n, 2);
       lam_s_tst(midx, nidx) =
-          dlr2d_coefs2eval(beta, dlr_rf, lam_s_c, lam_s_csing, m, n, 1);
+          coefs2eval_if(beta, dlr_rf, lam_s_c, lam_s_csing, m, n, 1);
       lam_d_tst(midx, nidx) =
-          dlr2d_coefs2eval(beta, dlr_rf, lam_d_c, lam_d_csing, m, n, 2);
+          coefs2eval_if(beta, dlr_rf, lam_d_c, lam_d_csing, m, n, 2);
       lam_m_tst(midx, nidx) =
-          dlr2d_coefs2eval(beta, dlr_rf, lam_m_c, lam_m_csing, m, n, 2);
+          coefs2eval_if(beta, dlr_rf, lam_m_c, lam_m_csing, m, n, 2);
     }
   }
   end = std::chrono::high_resolution_clock::now();
@@ -473,7 +472,7 @@ void hubatom_allfuncs_two_terms(double beta, double u, double lambda,
 
   // Build kernel matrix
   auto kmat = nda::matrix<dcomplex>();
-  kmat = get_kmat_two_terms(beta, dlr_rf, dlr2d_if);
+  kmat = build_coefs2vals_if_3term(beta, dlr_rf, dlr2d_if);
   int niom = dlr2d_if.shape(0);
 
   fmt::print("Fine system matrix shape = {} x {}\n", 2 * r * r, 2 * r * r + r);
@@ -545,8 +544,7 @@ void hubatom_allfuncs_two_terms(double beta, double u, double lambda,
   valsall(_, 4) = lam_d;
   valsall(_, 5) = lam_m;
 
-  auto [coefsall, coefsingall] =
-      dlr2d_vals2coefs_many_two_terms(kmat, valsall, r);
+  auto [coefsall, coefsingall] = vals2coefs_if_many_3term(kmat, valsall, r);
 
   chi_s_c = coefsall(0, _, _, _);
   chi_d_c = coefsall(1, _, _, _);
@@ -597,18 +595,18 @@ void hubatom_allfuncs_two_terms(double beta, double u, double lambda,
       lam_m_tru(midx, nidx) = lam_m_fun(u, beta, nu1, nu2);
 
       // Evaluate DLR expansions
-      chi_s_tst(midx, nidx) = dlr2d_coefs2eval_two_terms(beta, dlr_rf, chi_s_c,
-                                                         chi_s_csing, m, n, 1);
-      chi_d_tst(midx, nidx) = dlr2d_coefs2eval_two_terms(beta, dlr_rf, chi_d_c,
-                                                         chi_d_csing, m, n, 2);
-      chi_m_tst(midx, nidx) = dlr2d_coefs2eval_two_terms(beta, dlr_rf, chi_m_c,
-                                                         chi_m_csing, m, n, 2);
-      lam_s_tst(midx, nidx) = dlr2d_coefs2eval_two_terms(beta, dlr_rf, lam_s_c,
-                                                         lam_s_csing, m, n, 1);
-      lam_d_tst(midx, nidx) = dlr2d_coefs2eval_two_terms(beta, dlr_rf, lam_d_c,
-                                                         lam_d_csing, m, n, 2);
-      lam_m_tst(midx, nidx) = dlr2d_coefs2eval_two_terms(beta, dlr_rf, lam_m_c,
-                                                         lam_m_csing, m, n, 2);
+      chi_s_tst(midx, nidx) =
+          coefs2eval_if_3term(beta, dlr_rf, chi_s_c, chi_s_csing, m, n, 1);
+      chi_d_tst(midx, nidx) =
+          coefs2eval_if_3term(beta, dlr_rf, chi_d_c, chi_d_csing, m, n, 2);
+      chi_m_tst(midx, nidx) =
+          coefs2eval_if_3term(beta, dlr_rf, chi_m_c, chi_m_csing, m, n, 2);
+      lam_s_tst(midx, nidx) =
+          coefs2eval_if_3term(beta, dlr_rf, lam_s_c, lam_s_csing, m, n, 1);
+      lam_d_tst(midx, nidx) =
+          coefs2eval_if_3term(beta, dlr_rf, lam_d_c, lam_d_csing, m, n, 2);
+      lam_m_tst(midx, nidx) =
+          coefs2eval_if_3term(beta, dlr_rf, lam_m_c, lam_m_csing, m, n, 2);
     }
   }
   end = std::chrono::high_resolution_clock::now();
