@@ -13,8 +13,8 @@ using namespace std::numbers;
 using namespace dlr2d;
 
 nda::vector<double> siam_driver(double beta, double u, double lambda,
-                                   double eps, int niom_dense, int niomtst,
-                                   int nbos_tst, bool reduced) {
+                                double eps, int niom_dense, int niomtst,
+                                int nbos_tst, bool reduced) {
 
   auto path = "../../dlr2d_if_data/"; // Path for DLR 2D grid data
   auto datafile =
@@ -49,14 +49,15 @@ nda::vector<double> siam_driver(double beta, double u, double lambda,
   fmt::print("# imag freq in fine grid = {}\n\n", niom_dense);
 
   // Build kernel matrix
-  auto kmat = build_coefs2vals_if(beta, dlr_rf, dlr2d_if);
+  auto kmat = build_cf2if(beta, dlr_rf, dlr2d_if);
   int niom = dlr2d_if.shape(0);
 
   if (!reduced) {
     fmt::print("Fine system matrix shape = {} x {}\n", niom_dense * niom_dense,
                3 * r * r + r);
   } else {
-    fmt::print("Fine system matrix shape = {} x {}\n", 3 * r * r + r, 3 * r * r + r);
+    fmt::print("Fine system matrix shape = {} x {}\n", 3 * r * r + r,
+               3 * r * r + r);
   }
 
   fmt::print("DLR rank squared = {}\n", r * r);
@@ -252,12 +253,18 @@ nda::vector<double> siam_driver(double beta, double u, double lambda,
   double lam_d_linf = max_element(abs(lam_d_tru));
   double lam_m_linf = max_element(abs(lam_m_tru));
 
-  double chi_s_l2err = sqrt(sum(pow(abs(chi_s_tru - chi_s_tst), 2))) / beta / beta;
-  double chi_d_l2err = sqrt(sum(pow(abs(chi_d_tru - chi_d_tst), 2))) / beta / beta;
-  double chi_m_l2err = sqrt(sum(pow(abs(chi_m_tru - chi_m_tst), 2))) / beta / beta;
-  double lam_s_l2err = sqrt(sum(pow(abs(lam_s_tru - lam_s_tst), 2))) / beta / beta;
-  double lam_d_l2err = sqrt(sum(pow(abs(lam_d_tru - lam_d_tst), 2))) / beta / beta;
-  double lam_m_l2err = sqrt(sum(pow(abs(lam_m_tru - lam_m_tst), 2))) / beta / beta;
+  double chi_s_l2err =
+      sqrt(sum(pow(abs(chi_s_tru - chi_s_tst), 2))) / beta / beta;
+  double chi_d_l2err =
+      sqrt(sum(pow(abs(chi_d_tru - chi_d_tst), 2))) / beta / beta;
+  double chi_m_l2err =
+      sqrt(sum(pow(abs(chi_m_tru - chi_m_tst), 2))) / beta / beta;
+  double lam_s_l2err =
+      sqrt(sum(pow(abs(lam_s_tru - lam_s_tst), 2))) / beta / beta;
+  double lam_d_l2err =
+      sqrt(sum(pow(abs(lam_d_tru - lam_d_tst), 2))) / beta / beta;
+  double lam_m_l2err =
+      sqrt(sum(pow(abs(lam_m_tru - lam_m_tst), 2))) / beta / beta;
 
   double chi_s_linferr = max_element(abs(chi_s_tru - chi_s_tst));
   double chi_d_linferr = max_element(abs(chi_d_tru - chi_d_tst));
@@ -267,40 +274,40 @@ nda::vector<double> siam_driver(double beta, double u, double lambda,
   double lam_m_linferr = max_element(abs(lam_m_tru - lam_m_tst));
 
   fmt::print("--- chi_S results ---\n");
-  fmt::print("L2 norm:    {}\n",    chi_s_l2);
-  fmt::print("Linf norm:  {}\n",    chi_s_linf);
-  fmt::print("L2 error:   {}\n",    chi_s_l2err);
-  fmt::print("Linf error: {}\n\n",  chi_s_linferr);
+  fmt::print("L2 norm:    {}\n", chi_s_l2);
+  fmt::print("Linf norm:  {}\n", chi_s_linf);
+  fmt::print("L2 error:   {}\n", chi_s_l2err);
+  fmt::print("Linf error: {}\n\n", chi_s_linferr);
 
   fmt::print("--- chi_D results ---\n");
-  fmt::print("L2 norm:    {}\n",    chi_d_l2);
-  fmt::print("Linf norm:  {}\n",    chi_d_linf);
-  fmt::print("L2 error:   {}\n",    chi_d_l2err);
-  fmt::print("Linf error: {}\n\n",  chi_d_linferr);
+  fmt::print("L2 norm:    {}\n", chi_d_l2);
+  fmt::print("Linf norm:  {}\n", chi_d_linf);
+  fmt::print("L2 error:   {}\n", chi_d_l2err);
+  fmt::print("Linf error: {}\n\n", chi_d_linferr);
 
   fmt::print("--- chi_M results ---\n");
-  fmt::print("L2 norm:    {}\n",    chi_m_l2);
-  fmt::print("Linf norm:  {}\n",    chi_m_linf);
-  fmt::print("L2 error:   {}\n",    chi_m_l2err);
-  fmt::print("Linf error: {}\n\n",  chi_m_linferr);
+  fmt::print("L2 norm:    {}\n", chi_m_l2);
+  fmt::print("Linf norm:  {}\n", chi_m_linf);
+  fmt::print("L2 error:   {}\n", chi_m_l2err);
+  fmt::print("Linf error: {}\n\n", chi_m_linferr);
 
   fmt::print("--- lambda_S results ---\n");
-  fmt::print("L2 norm:    {}\n",    lam_s_l2);
-  fmt::print("Linf norm:  {}\n",    lam_s_linf);
-  fmt::print("L2 error:   {}\n",    lam_s_l2err);
-  fmt::print("Linf error: {}\n\n",  lam_s_linferr);
+  fmt::print("L2 norm:    {}\n", lam_s_l2);
+  fmt::print("Linf norm:  {}\n", lam_s_linf);
+  fmt::print("L2 error:   {}\n", lam_s_l2err);
+  fmt::print("Linf error: {}\n\n", lam_s_linferr);
 
   fmt::print("--- lambda_D results ---\n");
-  fmt::print("L2 norm:    {}\n",    lam_d_l2);
-  fmt::print("Linf norm:  {}\n",    lam_d_linf);
-  fmt::print("L2 error:   {}\n",    lam_d_l2err);
-  fmt::print("Linf error: {}\n\n",  lam_d_linferr);
+  fmt::print("L2 norm:    {}\n", lam_d_l2);
+  fmt::print("Linf norm:  {}\n", lam_d_linf);
+  fmt::print("L2 error:   {}\n", lam_d_l2err);
+  fmt::print("Linf error: {}\n\n", lam_d_linferr);
 
   fmt::print("--- lambda_M results ---\n");
-  fmt::print("L2 norm:    {}\n",    lam_m_l2);
-  fmt::print("Linf norm:  {}\n",    lam_m_linf);
-  fmt::print("L2 error:   {}\n",    lam_m_l2err);
-  fmt::print("Linf error: {}\n\n",  lam_m_linferr);
+  fmt::print("L2 norm:    {}\n", lam_m_l2);
+  fmt::print("Linf norm:  {}\n", lam_m_linf);
+  fmt::print("L2 error:   {}\n", lam_m_l2err);
+  fmt::print("Linf error: {}\n\n", lam_m_linferr);
 
   // Compute polarization from DLR expansions
   auto itops = imtime_ops(lambda, dlr_rf);
@@ -308,18 +315,23 @@ nda::vector<double> siam_driver(double beta, double u, double lambda,
   // auto pol_s =
   //     polarization(beta, ifops_fer, ifops_bos, gc, gc, lam_s_c, lam_s_csing);
   // pol_s += polarization_const(beta, itops, ifops_bos, gc, gc);
-  auto pol_s = polarization_new(beta, lambda, eps, itops, ifops_fer, ifops_bos, gc, gc, lam_s_c, lam_s_csing);
+  auto pol_s = polarization_new(beta, lambda, eps, itops, ifops_fer, ifops_bos,
+                                gc, gc, lam_s_c, lam_s_csing);
   pol_s *= -1.0 / 2;
 
   // auto pol_d =
-  //     polarization(beta, ifops_fer, ifops_bos, grc, gc, lam_d_c, lam_d_csing);
+  //     polarization(beta, ifops_fer, ifops_bos, grc, gc, lam_d_c,
+  //     lam_d_csing);
   // pol_d += polarization_const(beta, itops, ifops_bos, grc, gc);
-  auto pol_d = polarization_new(beta, lambda, eps, itops, ifops_fer, ifops_bos, grc, gc, lam_d_c, lam_d_csing);
+  auto pol_d = polarization_new(beta, lambda, eps, itops, ifops_fer, ifops_bos,
+                                grc, gc, lam_d_c, lam_d_csing);
 
   // auto pol_m =
-  //     polarization(beta, ifops_fer, ifops_bos, grc, gc, lam_m_c, lam_m_csing);
+  //     polarization(beta, ifops_fer, ifops_bos, grc, gc, lam_m_c,
+  //     lam_m_csing);
   // pol_m += polarization_const(beta, itops, ifops_bos, grc, gc);
-  auto pol_m = polarization_new(beta, lambda, eps, itops, ifops_fer, ifops_bos, grc, gc, lam_m_c, lam_m_csing);
+  auto pol_m = polarization_new(beta, lambda, eps, itops, ifops_fer, ifops_bos,
+                                grc, gc, lam_m_c, lam_m_csing);
 
   auto pol_s_c = ifops_bos.vals2coefs(beta, pol_s); // DLR expansion
   auto pol_d_c = ifops_bos.vals2coefs(beta, pol_d);
@@ -474,11 +486,11 @@ nda::vector<double> siam_driver(double beta, double u, double lambda,
 //   double u = 5;
 //   double lambda = 300;  // DLR cutoff
 //   double eps = 1e-14;   // DLR tolerance
-//   int niom_dense = 100; // # imag freq sample pts for fine grid (must be even)
-//   int niomtst = 256;    // # imag freq test points (must be even)
-//   int nbos_tst = 1024;  // # pts in test grid for polarization
-//   bool reduced = true;  // Full or reduced fine grid
-// 
+//   int niom_dense = 100; // # imag freq sample pts for fine grid (must be
+//   even) int niomtst = 256;    // # imag freq test points (must be even) int
+//   nbos_tst = 1024;  // # pts in test grid for polarization bool reduced =
+//   true;  // Full or reduced fine grid
+//
 //   auto results = siam_driver(beta, u, lambda, eps, niom_dense, niomtst,
 //                                nbos_tst, reduced);
 // }
@@ -486,10 +498,10 @@ nda::vector<double> siam_driver(double beta, double u, double lambda,
 int main() {
   double beta = 20; // Inverse temperature
   double u = 5;
-  double lambda = 300;  // DLR cutoff
+  double lambda = 300; // DLR cutoff
   // double eps = 1e-14;   // DLR tolerance
   int niom_dense = 100; // # imag freq sample pts for fine grid (must be even)
-  int niomtst =  1024;    // # imag freq test points (must be even)
+  int niomtst = 1024;   // # imag freq test points (must be even)
   int nbos_tst = 1024;  // # pts in test grid for polarization
   bool reduced = true;  // Full or reduced fine grid
 
@@ -500,7 +512,7 @@ int main() {
   auto results = nda::array<double, 2>(nresult, nexp);
   double eps = 0;
   for (int i = 0; i < nexp; ++i) {
-    eps = pow(10, -2.0*(i+1));
+    eps = pow(10, -2.0 * (i + 1));
     results(_, i) = siam_driver(beta, u, lambda, eps, niom_dense, niomtst,
                                 nbos_tst, reduced);
   }
@@ -512,6 +524,5 @@ int main() {
     for (int j = 0; j < nresult; ++j) {
       f << results(j, i) << "\n";
     }
-  } 
-
+  }
 }
