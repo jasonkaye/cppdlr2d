@@ -48,7 +48,7 @@ nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
   if (!compressbasis) {
     kmat = build_coefs2vals_if(beta, dlr_rf, dlr2d_if);
   } else {
-    kmat = build_coefs2vals_if_square(beta, dlr_rf, dlr2d_rfidx, dlr2d_if);
+    kmat = build_cf2if_square(beta, dlr_rf, dlr2d_rfidx, dlr2d_if);
   }
   int niom = dlr2d_if.shape(0);
 
@@ -472,7 +472,7 @@ void hubatom_allfuncs_two_terms(double beta, double u, double lambda,
 
   // Build kernel matrix
   auto kmat = nda::matrix<dcomplex>();
-  kmat = build_coefs2vals_if_3term(beta, dlr_rf, dlr2d_if);
+  kmat = build_cf2if_3term(beta, dlr_rf, dlr2d_if);
   int niom = dlr2d_if.shape(0);
 
   fmt::print("Fine system matrix shape = {} x {}\n", 2 * r * r, 2 * r * r + r);

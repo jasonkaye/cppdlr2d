@@ -556,15 +556,15 @@ void build_dlr2d_ifrf(nda::vector<double> dlr_rf, nda::vector<int> dlr_if_fer,
   fmt::print("System matrix rank = {}\n\n", r2d);
 }
 
-nda::matrix<dcomplex, F_layout> build_coefs2vals_if(double beta,
-                                                 nda::vector<double> dlr_rf,
-                                                 nda::array<int, 2> dlr2d_if) {
+nda::matrix<dcomplex, F_layout> build_cf2if(double beta,
+                                            nda::vector<double> dlr_rf,
+                                            nda::array<int, 2> dlr2d_if) {
 
   int r = dlr_rf.size();
   int niom_skel = dlr2d_if.shape(0);
 
   // Get system matrix for dense grid
-  auto kmat = nda::matrix<dcomplex, F_layout>(niom_skel, 3 * r * r + r);
+  auto cf2if = nda::matrix<dcomplex, F_layout>(niom_skel, 3 * r * r + r);
   // std::complex<double> nu1 = 0, nu2 = 0;
 
   // Regular part
@@ -572,19 +572,19 @@ nda::matrix<dcomplex, F_layout> build_coefs2vals_if(double beta,
     for (int l = 0; l < r; ++l) {
       for (int n = 0; n < niom_skel; ++n) {
 
-        kmat(n, k * r + l) = beta * beta *
-                             k_if(dlr2d_if(n, 0), dlr_rf(k), Fermion) *
-                             k_if(dlr2d_if(n, 1), dlr_rf(l), Fermion);
+        cf2if(n, k * r + l) = beta * beta *
+                              k_if(dlr2d_if(n, 0), dlr_rf(k), Fermion) *
+                              k_if(dlr2d_if(n, 1), dlr_rf(l), Fermion);
         // kmat(n, r * r + k * r + l) =
         //     beta * beta * k_if(dlr2d_if(n, 1), dlr_rf(k), Fermion) *
         //     my_k_if_boson(dlr2d_if(n, 0) + dlr2d_if(n, 1) + 1, dlr_rf(l));
         // kmat(n, 2 * r * r + k * r + l) =
         //     beta * beta * k_if(dlr2d_if(n, 0), dlr_rf(k), Fermion) *
         //     my_k_if_boson(dlr2d_if(n, 0) + dlr2d_if(n, 1) + 1, dlr_rf(l));
-        kmat(n, r * r + k * r + l) =
+        cf2if(n, r * r + k * r + l) =
             beta * beta * k_if(dlr2d_if(n, 1), dlr_rf(k), Fermion) *
             k_if_boson(dlr2d_if(n, 0) + dlr2d_if(n, 1) + 1, dlr_rf(l));
-        kmat(n, 2 * r * r + k * r + l) =
+        cf2if(n, 2 * r * r + k * r + l) =
             beta * beta * k_if(dlr2d_if(n, 0), dlr_rf(k), Fermion) *
             k_if_boson(dlr2d_if(n, 0) + dlr2d_if(n, 1) + 1, dlr_rf(l));
 
@@ -605,22 +605,22 @@ nda::matrix<dcomplex, F_layout> build_coefs2vals_if(double beta,
     for (int n = 0; n < niom_skel; ++n) {
       // nu1 = (2 * dlr2d_if(n, 0) + 1) * pi * 1i;
       if (dlr2d_if(n, 0) == -dlr2d_if(n, 1) - 1) {
-        kmat(n, 3 * r * r + k) =
+        cf2if(n, 3 * r * r + k) =
             beta * beta * k_if(dlr2d_if(n, 0), dlr_rf(k), Fermion);
         // kmat(n, 3 * r * r + k) = beta * ker(nu1, dlr_rf(k));
       } else {
-        kmat(n, 3 * r * r + k) = 0;
+        cf2if(n, 3 * r * r + k) = 0;
       }
     }
   }
 
-  return kmat;
+  return cf2if;
 }
 
 // two terms K matrix
-nda::matrix<dcomplex, F_layout>
-build_coefs2vals_if_3term(double beta, nda::vector<double> dlr_rf,
-                       nda::array<int, 2> dlr2d_if) {
+nda::matrix<dcomplex, F_layout> build_cf2if_3term(double beta,
+                                                  nda::vector<double> dlr_rf,
+                                                  nda::array<int, 2> dlr2d_if) {
 
   int r = dlr_rf.size();
   int niom_skel = dlr2d_if.shape(0);
@@ -662,9 +662,9 @@ build_coefs2vals_if_3term(double beta, nda::vector<double> dlr_rf,
 }
 
 nda::matrix<dcomplex, F_layout>
-build_coefs2vals_if_square(double beta, nda::vector<double> dlr_rf,
-                        nda::array<int, 2> dlr2d_rfidx,
-                        nda::array<int, 2> dlr2d_if) {
+build_cf2if_square(double beta, nda::vector<double> dlr_rf,
+                   nda::array<int, 2> dlr2d_rfidx,
+                   nda::array<int, 2> dlr2d_if) {
 
   int r = dlr_rf.size();
   int r2d = dlr2d_if.shape(0);
@@ -697,8 +697,8 @@ build_coefs2vals_if_square(double beta, nda::vector<double> dlr_rf,
 }
 
 nda::array<dcomplex, 1>
-vals2coefs_if_square(nda::matrix<dcomplex, F_layout> kmat,
-                  nda::vector_const_view<dcomplex> vals) {
+vals2coefs_if_square(nda::matrix<dcomplex, F_layout> cf2if,
+                     nda::vector_const_view<dcomplex> vals) {
 
   int r2d = vals.size();
   auto coef = nda::array<dcomplex, 1>(r2d);
@@ -706,14 +706,14 @@ vals2coefs_if_square(nda::matrix<dcomplex, F_layout> kmat,
 
   auto s = nda::vector<double>(r2d); // Singular values (not needed)
   int rank = 0;                      // Rank (not needed)
-  nda::lapack::gelss(kmat, coef, s, 0.0, rank);
+  nda::lapack::gelss(cf2if, coef, s, 0.0, rank);
 
   return coef;
 }
 
 std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>>
-vals2coefs_if(nda::matrix<dcomplex, F_layout> kmat,
-           nda::vector_const_view<dcomplex> vals, int r) {
+vals2coefs_if(nda::matrix<dcomplex, F_layout> cf2if,
+              nda::vector_const_view<dcomplex> vals, int r) {
 
   int m = vals.size();
   int n = 3 * r * r + r;
@@ -722,7 +722,7 @@ vals2coefs_if(nda::matrix<dcomplex, F_layout> kmat,
 
   auto s = nda::vector<double>(m); // Singular values (not needed)
   int rank = 0;                    // Rank (not needed)
-  nda::lapack::gelss(kmat, tmp, s, 0.0, rank);
+  nda::lapack::gelss(cf2if, tmp, s, 0.0, rank);
 
   // auto u = nda::matrix<dcomplex, F_layout>(m, m);
   // auto vt = nda::matrix<dcomplex, F_layout>(n, n);
@@ -744,30 +744,9 @@ vals2coefs_if(nda::matrix<dcomplex, F_layout> kmat,
   return {coefreg, coefsng};
 }
 
-std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>>
-vals2coefs_if_3term(nda::matrix<dcomplex, F_layout> kmat,
-                 nda::vector_const_view<dcomplex> vals, int r) {
-
-  int m = vals.size();
-  int n = 2 * r * r + r;
-  auto tmp = nda::array<dcomplex, 1>(n);
-  tmp(nda::range(m)) = vals;
-
-  auto s = nda::vector<double>(m); // Singular values (not needed)
-  int rank = 0;                    // Rank (not needed)
-  nda::lapack::gelss(kmat, tmp, s, 0.0, rank);
-
-  auto coefreg = nda::array<dcomplex, 3>(2, r, r);
-  auto coefsng = nda::array<dcomplex, 1>(r);
-  reshape(coefreg, 2 * r * r) = tmp(nda::range(2 * r * r));
-  coefsng = tmp(nda::range(2 * r * r, 2 * r * r + r));
-
-  return {coefreg, coefsng};
-}
-
 std::tuple<nda::array<dcomplex, 4>, nda::array<dcomplex, 2>>
-vals2coefs_if_many(nda::matrix<dcomplex, F_layout> kmat,
-                nda::array_const_view<dcomplex, 2, F_layout> vals, int r) {
+vals2coefs_if_many(nda::matrix<dcomplex, F_layout> cf2if,
+                   nda::array_const_view<dcomplex, 2, F_layout> vals, int r) {
 
   int m = vals.shape(0);
   int nrhs = vals.shape(1);
@@ -777,7 +756,7 @@ vals2coefs_if_many(nda::matrix<dcomplex, F_layout> kmat,
 
   auto s = nda::vector<double>(m); // Singular values (not needed)
   int rank = 0;                    // Rank (not needed)
-  nda::lapack::gelss(kmat, tmp, s, 0.0, rank);
+  nda::lapack::gelss(cf2if, tmp, s, 0.0, rank);
 
   auto coefreg = nda::array<dcomplex, 4>(nrhs, 3, r, r);
   auto coefsng = nda::array<dcomplex, 2>(nrhs, r);
@@ -790,10 +769,31 @@ vals2coefs_if_many(nda::matrix<dcomplex, F_layout> kmat,
   return {coefreg, coefsng};
 }
 
+std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>>
+vals2coefs_if_3term(nda::matrix<dcomplex, F_layout> cf2if,
+                    nda::vector_const_view<dcomplex> vals, int r) {
+
+  int m = vals.size();
+  int n = 2 * r * r + r;
+  auto tmp = nda::array<dcomplex, 1>(n);
+  tmp(nda::range(m)) = vals;
+
+  auto s = nda::vector<double>(m); // Singular values (not needed)
+  int rank = 0;                    // Rank (not needed)
+  nda::lapack::gelss(cf2if, tmp, s, 0.0, rank);
+
+  auto coefreg = nda::array<dcomplex, 3>(2, r, r);
+  auto coefsng = nda::array<dcomplex, 1>(r);
+  reshape(coefreg, 2 * r * r) = tmp(nda::range(2 * r * r));
+  coefsng = tmp(nda::range(2 * r * r, 2 * r * r + r));
+
+  return {coefreg, coefsng};
+}
+
 std::tuple<nda::array<dcomplex, 4>, nda::array<dcomplex, 2>>
-vals2coefs_if_many_3term(nda::matrix<dcomplex, F_layout> kmat,
-                      nda::array_const_view<dcomplex, 2, F_layout> vals,
-                      int r) {
+vals2coefs_if_many_3term(nda::matrix<dcomplex, F_layout> cf2if,
+                         nda::array_const_view<dcomplex, 2, F_layout> vals,
+                         int r) {
 
   int m = vals.shape(0);
   int nrhs = vals.shape(1);
@@ -803,7 +803,7 @@ vals2coefs_if_many_3term(nda::matrix<dcomplex, F_layout> kmat,
 
   auto s = nda::vector<double>(m); // Singular values (not needed)
   int rank = 0;                    // Rank (not needed)
-  nda::lapack::gelss(kmat, tmp, s, 0.0, rank);
+  nda::lapack::gelss(cf2if, tmp, s, 0.0, rank);
 
   auto coefreg = nda::array<dcomplex, 4>(nrhs, 2, r, r);
   auto coefsng = nda::array<dcomplex, 2>(nrhs, r);
@@ -819,9 +819,9 @@ vals2coefs_if_many_3term(nda::matrix<dcomplex, F_layout> kmat,
 // Evaluate 2D DLR expansion
 // Channel = 1 for particle-particle, = 2 for particle-hole
 std::complex<double> coefs2eval_if(double beta, nda::vector<double> dlr_rf,
-                                nda::array_const_view<dcomplex, 3> gc,
-                                nda::array_const_view<dcomplex, 1> gc_sing,
-                                int m, int n, int channel) {
+                                   nda::array_const_view<dcomplex, 3> gc,
+                                   nda::array_const_view<dcomplex, 1> gc_sing,
+                                   int m, int n, int channel) {
 
   int r = dlr_rf.size(); // # DLR basis functions
 
@@ -892,9 +892,9 @@ std::complex<double> coefs2eval_if(double beta, nda::vector<double> dlr_rf,
 // Channel = 1 for particle-particle, = 2 for particle-hole
 std::complex<double>
 coefs2eval_if_3term(double beta, nda::vector<double> dlr_rf,
-                 nda::array_const_view<dcomplex, 3> gc,
-                 nda::array_const_view<dcomplex, 1> gc_sing, int m, int n,
-                 int channel) {
+                    nda::array_const_view<dcomplex, 3> gc,
+                    nda::array_const_view<dcomplex, 1> gc_sing, int m, int n,
+                    int channel) {
 
   int r = dlr_rf.size(); // # DLR basis functions
 

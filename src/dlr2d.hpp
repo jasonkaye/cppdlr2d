@@ -165,23 +165,24 @@ read_dlr2d_rfif(std::string path, std::string filename);
 
 /*!
  * \brief Build matrix which maps coefficients of a 2D DLR expansion to its
- * values on the 2D DLR Matsubara frequency grid
+ * values on the 2D DLR imaginary (Matsubara) frequency grid
  *
  * \param[in] beta      Inverse temperature
  * \param[in] dlr_rf    1D DLR real frequencies
- * \param[in] dlr2d_if  2D DLR Matsubara frequency grid
+ * \param[in] dlr2d_if  2D DLR imaginary frequency grid
  *
  * \return Coefficients to values matrix
  */
-nda::matrix<dcomplex, F_layout>
-build_coefs2vals_if(double beta, nda::vector<double> dlr_rf,
-                    nda::array<int, 2> dlr2d_if);
+nda::matrix<dcomplex, F_layout> build_cf2if(double beta,
+                                            nda::vector<double> dlr_rf,
+                                            nda::array<int, 2> dlr2d_if);
 
 /*!
  * \brief Build matrix which maps coefficients of a 2D DLR expansion to its
- * values on the 2D DLR Matsubara frequency grid, using three-term DLR
+ * values on the 2D DLR imaginary (Matsubara) frequency grid, using three-term
+ * DLR
  *
- * It differs from \ref build_coefs2vals_if in that it uses a Lehmann
+ * This function differs from \ref build_cf2if in that it uses a Lehmann
  * representation of only three terms, rather than four, obtained by absorbing
  * one term into the others.
  *
@@ -191,16 +192,17 @@ build_coefs2vals_if(double beta, nda::vector<double> dlr_rf,
  *
  * \return Coefficients to values matrix
  */
-nda::matrix<dcomplex, F_layout>
-build_coefs2vals_if_3term(double beta, nda::vector<double> dlr_rf,
-                          nda::array<int, 2> dlr2d_if);
+nda::matrix<dcomplex, F_layout> build_cf2if_3term(double beta,
+                                                  nda::vector<double> dlr_rf,
+                                                  nda::array<int, 2> dlr2d_if);
 
 /*!
  * \brief Build matrix which maps coefficients of a 2D DLR expansion to its
- * values on the 2D DLR Matsubara frequency grid, using a recompressed 2D DLR
+ * values on the 2D DLR imaginary (Matsubara) frequency grid, using a
+ * recompressed 2D DLR
  *
- * It differs from \ref build_coefs2vals_if in that it uses a DLR with
- * recompressed 2D real frequency pairs; see \ref build_dlr2d_ifrf and \ref
+ * This function differs from \ref build_cf2if in that it uses a DLR
+ * with recompressed 2D real frequency pairs; see \ref build_dlr2d_ifrf and \ref
  * read_dlr2d_rfif.
  *
  * \param[in] beta          Inverse temperature
@@ -211,29 +213,102 @@ build_coefs2vals_if_3term(double beta, nda::vector<double> dlr_rf,
  * \return Coefficients to values matrix
  */
 nda::matrix<dcomplex, F_layout>
-build_coefs2vals_if_square(double beta, nda::vector<double> dlr_rf,
-                           nda::array<int, 2> dlr2d_rfidx,
-                           nda::array<int, 2> dlr2d_if);
+build_cf2if_square(double beta, nda::vector<double> dlr_rf,
+                   nda::array<int, 2> dlr2d_rfidx, nda::array<int, 2> dlr2d_if);
 
+/*!
+ * \brief Transform values of a 2D DLR expansion on the 2D DLR imaginary
+ * (Matsubara) frequency grid to its coefficients
+ *
+ * \param[in] cf2if  Coefficients to values matrix
+ * \param[in] vals   Values of 2D DLR expansion on 2D DLR Mat. freq. grid
+ * \param[in] r      # basis functions in 1D DLR
+ *
+ * \return Coefficients of 2D DLR expansion
+ *
+ * \note The matrix \p cf2if should be obtained using \ref build_cf2if.
+ */
 std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>>
-vals2coefs_if(nda::matrix<dcomplex, F_layout> kmat,
+vals2coefs_if(nda::matrix<dcomplex, F_layout> cf2if,
               nda::vector_const_view<dcomplex> vals, int r);
 
-std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>>
-vals2coefs_if_3term(nda::matrix<dcomplex, F_layout> kmat,
-                    nda::vector_const_view<dcomplex> vals, int r);
-
+/*!
+ * \brief Transform values of multiple 2D DLR expansions on the 2D DLR imaginary
+ * (Matsubara) frequency grid to their coefficients
+ *
+ * \param[in] cf2if  Coefficients to values matrix
+ * \param[in] vals   Values of 2D DLR expansions on 2D DLR Mat. freq. grid
+ * \param[in] r      # basis functions in 1D DLR
+ *
+ * \return Coefficients of 2D DLR expansions
+ *
+ * \note The matrix \p cf2if should be obtained using \ref build_cf2if.
+ *
+ * \note TODO: Replace \ref vals2coefs_if with a properly templated version of
+ * this function.
+ */
 std::tuple<nda::array<dcomplex, 4>, nda::array<dcomplex, 2>>
-vals2coefs_if_many(nda::matrix<dcomplex, F_layout> kmat,
+vals2coefs_if_many(nda::matrix<dcomplex, F_layout> cf2if,
                    nda::array_const_view<dcomplex, 2, F_layout> vals, int r);
 
+/*!
+ * \brief Transform values of a 2D DLR expansion on the 2D DLR imaginary
+ * (Matsubara) frequency grid to its coefficients, using three-term DLR
+ *
+ * This function differs from \ref vals2coefs_if in that it uses a Lehmann
+ * representation of only three terms, rather than four, obtained by absorbing
+ * one term into the others.
+ *
+ * \param[in] cf2if  Coefficients to values matrix
+ * \param[in] vals   Values of 2D DLR expansion on 2D DLR Mat. freq. grid
+ * \param[in] r      # basis functions in 1D DLR
+ *
+ * \return Coefficients of 2D DLR expansion
+ *
+ * \note The matrix \p cf2if should be obtained using \ref build_cf2if_3term.
+ */
+std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>>
+vals2coefs_if_3term(nda::matrix<dcomplex, F_layout> cf2if,
+                    nda::vector_const_view<dcomplex> vals, int r);
+
+/*!
+ * \brief Transform values of multiple 2D DLR expansions on the 2D DLR imaginary
+ * (Matsubara) frequency grid to their coefficients, using three-term DLR
+ *
+ * This function differs from \ref vals2coefs_if_many in that it uses a Lehmann
+ * representation of only three terms, rather than four, obtained by absorbing
+ * one term into the others.
+ *
+ * \param[in] cf2if  Coefficients to values matrix
+ * \param[in] vals   Values of 2D DLR expansions on 2D DLR Mat. freq. grid
+ * \param[in] r      # basis functions in 1D DLR
+ *
+ * \return Coefficients of 2D DLR expansions
+ *
+ * \note The matrix \p cf2if should be obtained using \ref build_cf2if_3term.
+ */
 std::tuple<nda::array<dcomplex, 4>, nda::array<dcomplex, 2>>
-vals2coefs_if_many_3term(nda::matrix<dcomplex, F_layout> kmat,
+vals2coefs_if_many_3term(nda::matrix<dcomplex, F_layout> cf2if,
                          nda::array_const_view<dcomplex, 2, F_layout> vals,
                          int r);
 
+/*!
+ * \brief Transform values of a 2D DLR expansion on the 2D DLR imaginary
+ * (Matsubara) frequency grid to its coefficients, using a recompressed 2D DLR
+ *
+ * This function differs from \ref vals2coefs_if in that it uses a DLR
+ * with recompressed 2D real frequency pairs; see \ref build_dlr2d_ifrf and \ref
+ * read_dlr2d_rfif.
+ *
+ * \param[in] cf2if  Coefficients to values matrix
+ * \param[in] vals   Values of 2D DLR expansion on 2D DLR Mat. freq. grid
+ *
+ * \return Coefficients of 2D DLR expansion
+ *
+ * \note The matrix \p cf2if should be obtained using \ref build_cf2if_square.
+ */
 nda::array<dcomplex, 1>
-vals2coefs_if_square(nda::matrix<dcomplex, F_layout> kmat,
+vals2coefs_if_square(nda::matrix<dcomplex, F_layout> cf2if,
                      nda::vector_const_view<dcomplex> vals);
 
 // Evaluate 2D DLR expansion
