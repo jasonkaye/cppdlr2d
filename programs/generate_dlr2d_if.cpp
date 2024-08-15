@@ -1,4 +1,5 @@
 #include "../src/dlr2d.hpp"
+#include "../src/utils.hpp"
 #include <cppdlr/cppdlr.hpp>
 #include <fmt/format.h>
 
@@ -82,7 +83,7 @@ void generate_dlr2d_if_two_terms_driver(nda::vector<double> lambdas, double eps,
     auto start = std::chrono::high_resolution_clock::now();
     fmt::print("System matrix shape = {} x {}\n", 2 * r * r, 2 * r * r + r);
 
-    auto filename = get_filename_two_terms(lambda, eps);
+    auto filename = get_filename_3term(lambda, eps);
     build_dlr2d_if_3term(dlr_rf, dlr_if_fer, dlr_if_bos, eps, path, filename);
 
     auto end = std::chrono::high_resolution_clock::now();

@@ -1,15 +1,10 @@
 #include "../src/dlr2d.hpp"
 #include "../src/polarization.hpp"
-#include "cppdlr/dlr_kernels.hpp"
-#include "nda/blas/tools.hpp"
-#include <cppdlr/cppdlr.hpp>
+#include "../src/utils.hpp"
 #include <fmt/format.h>
 #include <fstream>
-#include <nda/nda.hpp>
-#include <numbers>
 
 using namespace cppdlr;
-using namespace std::numbers;
 using namespace dlr2d;
 
 nda::vector<double> siam_driver(double beta, double u, double lambda,

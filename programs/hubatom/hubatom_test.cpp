@@ -1,5 +1,6 @@
 #include "../../src/dlr2d.hpp"
 #include "../../src/polarization.hpp"
+#include "../../src/utils.hpp"
 #include "hubatom.hpp"
 #include <fmt/format.h>
 #include <gtest/gtest.h>
@@ -41,7 +42,7 @@ TEST(hubatom, main) {
   dlr2d_if_ph(_, 0) = -dlr2d_if(_, 0) - 1;
   dlr2d_if_ph(_, 1) = dlr2d_if(_, 1);
 
-  auto kmat = build_coefs2vals_if(beta, dlr_rf, dlr2d_if);
+  auto kmat = build_cf2if(beta, dlr_rf, dlr2d_if);
   fmt::print("Fine system matrix shape = {} x {}\n", 3 * r * r + r,
              3 * r * r + r);
 

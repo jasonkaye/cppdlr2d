@@ -311,56 +311,73 @@ nda::array<dcomplex, 1>
 vals2coefs_if_square(nda::matrix<dcomplex, F_layout> cf2if,
                      nda::vector_const_view<dcomplex> vals);
 
-// Evaluate 2D DLR expansion
+/*!
+ * \brief Evaluate a 2D DLR expansion at a given fermionic/fermionic Matsubara
+ * frequency point
+ *
+ * \param[in] beta    Inverse temperature
+ * \param[in] dlr_rf  1D DLR real frequencies
+ * \param[in] gc_reg  2D DLR regular expansion coefficients
+ * \param[in] gc_sng  1D DLR singular expansion coefficients
+ * \param[in] m       First index of Matsubara frequency point
+ * \param[in] n       Second index of Matsubara frequency point
+ * \param[in] channel Channel index (=1 for particle-particle, =2 for
+ particle-hole)
+
+ * \note For a fermionic Matsubara frequency i*nu_n = (2n+1)*pi/beta, we refer
+ * to n as its index. An index pair (m, n) corresponds to the 2D Matsubara
+ * frequency point (i nu_m, i nu_n).
+ */
 std::complex<double> coefs2eval_if(double beta, nda::vector<double> dlr_rf,
-                                   nda::array_const_view<dcomplex, 3> gc,
-                                   nda::array_const_view<dcomplex, 1> gc_skel,
+                                   nda::array_const_view<dcomplex, 3> gc_reg,
+                                   nda::array_const_view<dcomplex, 1> gc_sng,
                                    int m, int n, int channel);
 
+/*!
+ * \brief Evaluate a 2D DLR expansion at a given fermionic/fermionic Matsubara
+ * frequency point, using three-term DLR
+ *
+ * This function differs from \ref coefs2eval_if in that it uses a Lehmann
+ * representation of only three terms, rather than four, obtained by absorbing
+ * one term into the others.
+ *
+ * \param[in] beta    Inverse temperature
+ * \param[in] dlr_rf  1D DLR real frequencies
+ * \param[in] gc_reg  2D DLR regular expansion coefficients
+ * \param[in] gc_sng  1D DLR singular expansion coefficients
+ * \param[in] m       First index of Matsubara frequency point
+ * \param[in] n       Second index of Matsubara frequency point
+ * \param[in] channel Channel index (=1 for particle-particle, =2 for
+ particle-hole)
+
+ * \note For a fermionic Matsubara frequency i*nu_n = (2n+1)*pi/beta, we refer
+ * to n as its index. An index pair (m, n) corresponds to the 2D Matsubara
+ * frequency point (i nu_m, i nu_n).
+ */
 std::complex<double>
 coefs2eval_if_3term(double beta, nda::vector<double> dlr_rf,
-                    nda::array_const_view<dcomplex, 3> gc,
-                    nda::array_const_view<dcomplex, 1> gc_sing, int m, int n,
+                    nda::array_const_view<dcomplex, 3> gc_reg,
+                    nda::array_const_view<dcomplex, 1> gc_sng, int m, int n,
                     int channel);
 
+/*!
+ * \brief Convert compressed 2D DLR expansion coefficients to ordinary
+ * (overcomplete) 2D DLR expansion coefficient storage format
+ *
+ * This function must be called before using \ref coefs2eval_if to evaluate a
+ * compressed DLR expansion with DLR frequency pairs obtained using \ref
+ * build_dlr2d_ifrf. It returns 2D DLR expansion coefficients with zeros
+ * corresponding to DLR frequency pairs which were not selected during the
+ * compression.
+ *
+ * \param[in] r             # basis functions in 1D DLR
+ * \param[in] dlr2d_rfidx   Compressed 2D DLR real frequency index pairs
+ * \param[in] gc            Compressed 2D DLR expansion coefficients
+ *
+ * \return 2D DLR regular and singular expansion coefficients
+ */
 std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>>
 uncompress_basis(int r, nda::array<int, 2> dlr2d_rfidx,
-                 nda::array<dcomplex, 1> coef);
-
-// Generate name for dlr2d_if file
-std::string get_filename(double lambda, double eps, int niom_dense);
-
-// Generate name for dlr2d_if file
-std::string get_filename(double lambda, double eps, bool compressed = 0);
-
-// Generate name for dlr2d_if file with 2 terms
-std::string get_filename_two_terms(double lambda, double eps);
-
-// Estimate rank of a square matrix A for which the full pivoted QR
-// decomposition has been obtained using the function geqp3. The
-// upper-triangular matrix R, which is used to estimate the rank, is stored in
-// the upper-triangular part of A.
-//
-// We use Eqn. (4.3) from Halko, Martinsson, Tropp, SIAM Rev. 2011 to obtain an
-// efficient randomized algorithm to estimate the rank in a manner which
-// guarantees (with very high probability) that the spectral norm error of the
-// resulting estimate of A is less than eps. The failure probability is
-// alpha^(-nvec), and is determined by the "paranoia factor" alpha > 1, and the
-// number of random vectors nvec used in the algorithm. The total work is
-// proportional to nvec. Larger values of alpha lead to a less optimal estimate
-// of the rank, so the most optimal solution is obtained by choosing alpha close
-// to 1 and a correspondingly large value of nvec.
-int estimate_rank(nda::matrix_const_view<dcomplex, F_layout> a, double eps,
-                  double alpha, int nvec);
-
-nda::vector<int> get_dlr_if_boson(double lambda,
-                                  nda::vector_const_view<double> dlr_rf);
-
-// Imaginary frequency kernel function
-std::complex<double> ker(std::complex<double> nu, double om);
-
-// Function to convert linear index of nxn column-major array to index pair
-// (zero-indexed)
-std::tuple<int, int> ind2sub(int idx, int n);
+                 nda::array<dcomplex, 1> gc);
 
 } // namespace dlr2d

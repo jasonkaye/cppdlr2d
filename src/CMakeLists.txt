@@ -1,6 +1,7 @@
 add_library(nddlr_c STATIC
   polarization.cpp
   dlr2d.cpp
+  utils.cpp
   )
 
 target_link_libraries(nddlr_c cppdlr::cppdlr_c)

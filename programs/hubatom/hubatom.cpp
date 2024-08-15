@@ -1,6 +1,6 @@
 #include "hubatom.hpp"
+#include "../src/utils.hpp"
 #include <fmt/format.h>
-#include <fstream>
 #include <numbers>
 
 using namespace cppdlr;
@@ -46,7 +46,7 @@ nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
   // Build kernel matrix
   auto kmat = nda::matrix<dcomplex>();
   if (!compressbasis) {
-    kmat = build_coefs2vals_if(beta, dlr_rf, dlr2d_if);
+    kmat = build_cf2if(beta, dlr_rf, dlr2d_if);
   } else {
     kmat = build_cf2if_square(beta, dlr_rf, dlr2d_rfidx, dlr2d_if);
   }
@@ -451,7 +451,7 @@ void hubatom_allfuncs_two_terms(double beta, double u, double lambda,
   // Read 2D DLR grid indices from file
   std::string filename;
 
-  filename = get_filename_two_terms(lambda, eps);
+  filename = get_filename_3term(lambda, eps);
 
   auto dlr2d_if = nda::array<int, 2>();
   auto dlr2d_rfidx = nda::array<int, 2>();
