@@ -308,24 +308,24 @@ nda::vector<double> siam_driver(double beta, double u, double lambda,
   auto itops = imtime_ops(lambda, dlr_rf);
 
   // auto pol_s =
-  //     polarization(beta, ifops_fer, ifops_bos, gc, gc, lam_s_c, lam_s_csing);
+  //     polarization_res(beta, ifops_fer, ifops_bos, gc, gc, lam_s_c, lam_s_csing);
   // pol_s += polarization_const(beta, itops, ifops_bos, gc, gc);
-  auto pol_s = polarization_new(beta, lambda, eps, itops, ifops_fer, ifops_bos,
+  auto pol_s = polarization(beta, lambda, eps, itops, ifops_fer, ifops_bos,
                                 gc, gc, lam_s_c, lam_s_csing);
   pol_s *= -1.0 / 2;
 
   // auto pol_d =
-  //     polarization(beta, ifops_fer, ifops_bos, grc, gc, lam_d_c,
+  //     polarization_res(beta, ifops_fer, ifops_bos, grc, gc, lam_d_c,
   //     lam_d_csing);
   // pol_d += polarization_const(beta, itops, ifops_bos, grc, gc);
-  auto pol_d = polarization_new(beta, lambda, eps, itops, ifops_fer, ifops_bos,
+  auto pol_d = polarization(beta, lambda, eps, itops, ifops_fer, ifops_bos,
                                 grc, gc, lam_d_c, lam_d_csing);
 
   // auto pol_m =
-  //     polarization(beta, ifops_fer, ifops_bos, grc, gc, lam_m_c,
+  //     polarization_res(beta, ifops_fer, ifops_bos, grc, gc, lam_m_c,
   //     lam_m_csing);
   // pol_m += polarization_const(beta, itops, ifops_bos, grc, gc);
-  auto pol_m = polarization_new(beta, lambda, eps, itops, ifops_fer, ifops_bos,
+  auto pol_m = polarization(beta, lambda, eps, itops, ifops_fer, ifops_bos,
                                 grc, gc, lam_m_c, lam_m_csing);
 
   auto pol_s_c = ifops_bos.vals2coefs(beta, pol_s); // DLR expansion

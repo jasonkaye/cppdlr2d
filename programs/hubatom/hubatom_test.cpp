@@ -157,7 +157,7 @@ TEST(hubatom, main) {
   // Compute polarization from DLR expansions
   auto itops = imtime_ops(lambda, dlr_rf);
 
-  auto pol_s = polarization_new(beta, lambda, eps, itops, ifops_fer, ifops_bos,
+  auto pol_s = polarization(beta, lambda, eps, itops, ifops_fer, ifops_bos,
                                 gc, gc, lam_s_c, lam_s_csing);
   pol_s *= -1.0 / 2;
 
