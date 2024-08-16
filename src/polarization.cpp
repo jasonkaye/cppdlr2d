@@ -139,6 +139,125 @@ nda::vector<dcomplex> polarization(
   return pol;
 }
 
+nda::vector<dcomplex> polarization_3term(
+    double beta, double lambda, double eps, cppdlr::imtime_ops const &itops,
+    cppdlr::imfreq_ops const &ifops_fer, cppdlr::imfreq_ops const &ifops_bos,
+    nda::array_const_view<dcomplex, 1> fc,
+    nda::array_const_view<dcomplex, 1> gc,
+    nda::array_const_view<dcomplex, 3> lambc,
+    nda::array_const_view<dcomplex, 1> lambc_sing) {
+
+  auto dlr_rf = ifops_bos.get_rfnodes();
+  auto dlr_if_fer = ifops_fer.get_ifnodes();
+  auto dlr_if_bos = ifops_bos.get_ifnodes();
+  int r = dlr_rf.size();
+
+  // Get finer DLR tau discretization
+  double lambda2 = 2 * lambda;
+  auto dlr_rf2 = build_dlr_rf(lambda2, eps);
+  int r2 = dlr_rf2.size();
+  auto itops2 = imtime_ops(lambda2, dlr_rf2);
+
+  // Get coefs -> fine tau vals matrix
+  auto cf2itfine = build_k_it(itops2.get_itnodes(), dlr_rf);
+
+  // Get fine coefs -> bosonic imag freq vals matrix
+  auto cffine2if = nda::matrix<dcomplex>(r, r2);
+  for (int k = 0; k < r2; ++k) {
+    for (int j = 0; j < r; ++j) {
+      cffine2if(j, k) = k_if(dlr_if_bos(j), dlr_rf2(k), Boson);
+    }
+  }
+
+  auto pol = nda::zeros<dcomplex>(r);
+
+  // Compute 1/(i Omega_m - omega_k)
+  auto kkif = nda::array<dcomplex, 2>(r, r);
+  auto iom = 2 * dlr_if_bos * pi * 1i;
+  for (int j = 0; j < r; ++j) {
+    for (int k = 0; k < r; ++k) {
+      // kkif(j, k) = beta / (iom(j) - dlr_rf(k));
+      kkif(j, k) = beta * k_if_boson(dlr_if_bos(j), dlr_rf(k));
+    }
+  }
+
+  // Compute F(tau) and G(tau)
+  // auto fit = itops.coefs2vals(fc);
+  // auto git = itops.coefs2vals(gc);
+  auto fit = matvecmul(cf2itfine, fc);
+  auto git = matvecmul(cf2itfine, gc);
+
+  // Compute F_k(i nu_n) = F(i nu_n)/(i nu_n - omega_k) and G_k(i nu_n) = G(i
+  // nu_n)/(i nu_n - omega_k)
+
+  auto fif = ifops_fer.coefs2vals(beta, fc);
+  auto gif = ifops_fer.coefs2vals(beta, gc);
+
+  auto fkif = nda::matrix<dcomplex>(r, r);
+  auto gkif = nda::matrix<dcomplex>(r, r);
+
+  auto inu = (2 * dlr_if_fer + 1) * pi * 1i;
+  for (int j = 0; j < r; ++j) {
+    for (int k = 0; k < r; ++k) {
+      fkif(j, k) = beta * fif(j) / (inu(j) - dlr_rf(k));
+      gkif(j, k) = beta * gif(j) / (inu(j) - dlr_rf(k));
+    }
+  }
+
+  // Compute F_k(tau) and G_k(tau)
+  // auto fkit = itops.coefs2vals(ifops_fer.vals2coefs(beta, fkif));
+  // auto gkit = itops.coefs2vals(ifops_fer.vals2coefs(beta, gkif));
+  auto fkit = matmul(cf2itfine, ifops_fer.vals2coefs(beta, fkif));
+  auto gkit = matmul(cf2itfine, ifops_fer.vals2coefs(beta, gkif));
+
+  // Compute contribution to polarization from second and third non-constant
+  // terms of vertex
+
+  auto tmp1 = nda::matrix<dcomplex>(r2, r);
+  auto tmp2 = nda::matrix<dcomplex>(r2, r);
+
+  for (int j = 0; j < r2; ++j) {
+    for (int k = 0; k < r; ++k) {
+      tmp1(j, k) = fit(j) * gkit(j, k);
+      tmp2(j, k) = git(j) * fkit(j, k);
+    }
+  }
+  auto tmp3 = matmul(tmp1, lambc(0, _, _));
+  auto tmp4 = matmul(tmp2, lambc(1, _, _));
+
+  // tmp3 = ifops_bos.coefs2vals(beta, itops.vals2coefs(tmp3));
+  // tmp4 = ifops_bos.coefs2vals(beta, itops.vals2coefs(tmp4));
+  auto tmp31 = beta * matmul(cffine2if, itops2.vals2coefs(tmp3));
+  auto tmp41 = beta * matmul(cffine2if, itops2.vals2coefs(tmp4));
+  for (int j = 0; j < r; ++j) {
+    for (int k = 0; k < r; ++k) {
+      pol(j) += kkif(j, k) * (tmp31(j, k) + tmp41(j, k));
+    }
+  }
+
+  // Compute contribution to polarization from singular part of vertex
+  auto tmp5 = matvecmul(tmp2, lambc_sing);
+  auto tmp6 = cffine2if * itops2.vals2coefs(tmp5);
+
+  int m0idx = 0;
+  for (int j = 0; j < r; ++j) {
+    if (dlr_if_bos(j) == 0) {
+      pol(j) += beta * beta * tmp6(j);
+      m0idx = j;
+      break;
+    }
+  }
+
+  // Contribution to polarization from constant part of vertex
+  auto fgit = make_regular(nda::array_const_view<dcomplex, 1>(fit) *
+                           nda::array_const_view<dcomplex, 1>(git));
+  // pol += beta * ifops_bos.coefs2vals(itops.vals2coefs(fgit));
+  pol += beta * matvecmul(cffine2if, itops2.vals2coefs(fgit));
+
+  return pol;
+}
+
+
 // Compute polarization
 nda::vector<dcomplex>
 polarization_res(double beta, imfreq_ops const &ifops_fer,
