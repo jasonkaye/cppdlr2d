@@ -10,11 +10,17 @@ namespace dlr2d {
 
 // Obtain 2D DLR nodes
 
-void build_dlr2d_if_fullgrid(nda::vector<double> dlr_rf, int niom_dense,
+void build_dlr2d_if_fullgrid(double lambda, int niom_dense,
                              double eps, std::string path,
                              std::string filename) {
 
-  int r = dlr_rf.size();
+    // Get DLR frequencies
+  auto dlr_rf = build_dlr_rf(lambda, eps);
+  int r = dlr_rf.size(); // # DLR basis functions
+
+  fmt::print("\nDLR cutoff Lambda = {}\n", lambda);
+  fmt::print("DLR tolerance epsilon = {}\n", eps);
+  fmt::print("# DLR basis functions = {}\n", r);
 
   // Get dense Matsubara frequency sampling grid
   auto nu_dense = nda::vector<dcomplex>(niom_dense);
@@ -116,15 +122,24 @@ read_dlr2d_rfif(std::string path, std::string filename) {
   return {dlr2d_rfidx, dlr2d_if};
 }
 
-// Obtain 2D DLR nodes using reduced fine grid, mixed fermionic/bosonic
-// representation three regular terms and one singular term
-void build_dlr2d_if(nda::vector<double> dlr_rf, nda::vector<int> dlr_if_fer,
-                    nda::vector<int> dlr_if_bos, double eps, std::string path,
+void build_dlr2d_if(double lambda, double eps, std::string path,
                     std::string filename) {
 
   int rankmethod = 1;
 
-  int r = dlr_rf.size();
+  // Get DLR frequencies
+  auto dlr_rf = build_dlr_rf(lambda, eps);
+  int r = dlr_rf.size(); // # DLR basis functions
+
+  fmt::print("\nDLR cutoff Lambda = {}\n", lambda);
+  fmt::print("DLR tolerance epsilon = {}\n", eps);
+  fmt::print("# DLR basis functions = {}\n", r);
+
+  // Get fermionic and bosonic DLR grids
+  auto ifops_fer = imfreq_ops(lambda, dlr_rf, Fermion);
+  auto ifops_bos = imfreq_ops(lambda, dlr_rf, Boson);
+  auto dlr_if_fer = ifops_fer.get_ifnodes();
+  auto dlr_if_bos = ifops_bos.get_ifnodes();
 
   // Get fine 2D Matsubara frequency sampling grid
   auto nu2didx = nda::array<int, 2>(3 * r * r, 2);
@@ -244,14 +259,24 @@ void build_dlr2d_if(nda::vector<double> dlr_rf, nda::vector<int> dlr_if_fer,
 
 // Obtain 2D DLR nodes using reduced fine grid, mixed fermionic/bosonic
 // representation, two terms
-void build_dlr2d_if_3term(nda::vector<double> dlr_rf,
-                          nda::vector<int> dlr_if_fer,
-                          nda::vector<int> dlr_if_bos, double eps,
+void build_dlr2d_if_3term(double lambda, double eps,
                           std::string path, std::string filename) {
 
   int rankmethod = 1;
 
-  int r = dlr_rf.size();
+  // Get DLR frequencies
+  auto dlr_rf = build_dlr_rf(lambda, eps);
+  int r = dlr_rf.size(); // # DLR basis functions
+
+  fmt::print("\nDLR cutoff Lambda = {}\n", lambda);
+  fmt::print("DLR tolerance epsilon = {}\n", eps);
+  fmt::print("# DLR basis functions = {}\n", r);
+
+  // Get fermionic and bosonic DLR grids
+  auto ifops_fer = imfreq_ops(lambda, dlr_rf, Fermion);
+  auto ifops_bos = imfreq_ops(lambda, dlr_rf, Boson);
+  auto dlr_if_fer = ifops_fer.get_ifnodes();
+  auto dlr_if_bos = ifops_bos.get_ifnodes();
 
   // Get fine 2D Matsubara frequency sampling grid
   auto nu2didx = nda::array<int, 2>(2 * r * r, 2);
@@ -368,13 +393,24 @@ void build_dlr2d_if_3term(nda::vector<double> dlr_rf,
 }
 
 // Obtain 2D DLR nodes using reduced fine grid, recompression of basis
-void build_dlr2d_ifrf(nda::vector<double> dlr_rf, nda::vector<int> dlr_if_fer,
-                      nda::vector<int> dlr_if_bos, double eps, std::string path,
+void build_dlr2d_ifrf(double lambda, double eps, std::string path,
                       std::string filename) {
 
   int rankmethod = 1;
 
-  int r = dlr_rf.size();
+  // Get DLR frequencies
+  auto dlr_rf = build_dlr_rf(lambda, eps);
+  int r = dlr_rf.size(); // # DLR basis functions
+
+  fmt::print("\nDLR cutoff Lambda = {}\n", lambda);
+  fmt::print("DLR tolerance epsilon = {}\n", eps);
+  fmt::print("# DLR basis functions = {}\n", r);
+
+  // Get fermionic and bosonic DLR grids
+  auto ifops_fer = imfreq_ops(lambda, dlr_rf, Fermion);
+  auto ifops_bos = imfreq_ops(lambda, dlr_rf, Boson);
+  auto dlr_if_fer = ifops_fer.get_ifnodes();
+  auto dlr_if_bos = ifops_bos.get_ifnodes();
 
   // Get fine 2D Matsubara frequency sampling grid
   auto nu2didx = nda::array<int, 2>(3 * r * r + r, 2);

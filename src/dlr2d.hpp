@@ -15,9 +15,7 @@ namespace dlr2d {
  * of three-point functions", arXiv:2405.06716, which involves building the fine
  * Matsubara frequency grid from combinations of 1D DLR grid points.
  *
- * \param[in] dlr_rf      1D DLR real frequencies
- * \param[in] dlr_if_fer  Fermionic 1D DLR Matsubara frequencies
- * \param[in] dlr_if_bos  Bosonic 1D DLR Matsubara frequencies
+ * \param[in] lambda      DLR cutoff parameter
  * \param[in] eps         Error tolerance
  * \param[in] path        Path to directory in which to save 2D DLR Mat. freqs.
  * \param[in] filename    Name of file in which to save 2D DLR Mat. freqs.
@@ -26,8 +24,7 @@ namespace dlr2d {
  * to n as its index. An index pair (m, n) corresponds to the 2D Matsubara
  * frequency point (i nu_m, i nu_n).
  */
-void build_dlr2d_if(nda::vector<double> dlr_rf, nda::vector<int> dlr_if_fer,
-                    nda::vector<int> dlr_if_bos, double eps, std::string path,
+void build_dlr2d_if(double lambda, double eps, std::string path,
                     std::string filename);
 
 /*!
@@ -41,9 +38,7 @@ void build_dlr2d_if(nda::vector<double> dlr_rf, nda::vector<int> dlr_if_fer,
  * Lehmann representation of only three terms, rather than four, obtained by
  * absorbing one term into the others.
  *
- * \param[in] dlr_rf      1D DLR real frequencies
- * \param[in] dlr_if_fer  Fermionic 1D DLR Matsubara frequencies
- * \param[in] dlr_if_bos  Bosonic 1D DLR Matsubara frequencies
+ * \param[in] lambda      DLR cutoff parameter
  * \param[in] eps         Error tolerance
  * \param[in] path        Path to directory in which to save 2D DLR Mat. freqs.
  * \param[in] filename    Name of file in which to save 2D DLR Mat. freqs.
@@ -52,10 +47,8 @@ void build_dlr2d_if(nda::vector<double> dlr_rf, nda::vector<int> dlr_if_fer,
  * to n as its index. An index pair (m, n) corresponds to the 2D Matsubara
  * frequency point (i nu_m, i nu_n).
  */
-void build_dlr2d_if_3term(nda::vector<double> dlr_rf,
-                          nda::vector<int> dlr_if_fer,
-                          nda::vector<int> dlr_if_bos, double eps,
-                          std::string path, std::string filename);
+void build_dlr2d_if_3term(double lambda, double eps, std::string path,
+                          std::string filename);
 
 /*!
  * \brief Obtain 2D DLR Matsubara frequency grid and compressed 2D DLR real
@@ -71,9 +64,7 @@ void build_dlr2d_if_3term(nda::vector<double> dlr_rf,
  * using the pivoted Gram-Schmidt algorithm on the columns of the row-compressed
  * kernel matrix.
  *
- * \param[in] dlr_rf      1D DLR real frequencies
- * \param[in] dlr_if_fer  Fermionic 1D DLR Matsubara frequencies
- * \param[in] dlr_if_bos  Bosonic 1D DLR Matsubara frequencies
+ * \param[in] lambda      DLR cutoff parameter
  * \param[in] eps         Error tolerance
  * \param[in] path        Path to directory in which to save 2D DLR Mat. freqs.
  * \param[in] filename    Name of file in which to save 2D DLR Mat. freqs.
@@ -90,8 +81,7 @@ void build_dlr2d_if_3term(nda::vector<double> dlr_rf,
  * "overcomplete" representation, whereas this method yields a fully compressed
  * representation.
  */
-void build_dlr2d_ifrf(nda::vector<double> dlr_rf, nda::vector<int> dlr_if_fer,
-                      nda::vector<int> dlr_if_bos, double eps, std::string path,
+void build_dlr2d_ifrf(double lambda, double eps, std::string path,
                       std::string filename);
 
 /*!
@@ -102,7 +92,7 @@ void build_dlr2d_ifrf(nda::vector<double> dlr_rf, nda::vector<int> dlr_if_fer,
  * 2D DLR Matsubara frequency grid points in terms of Matsubara frequency index
  * pairs.
  *
- * \param[in] dlr_rf      1D DLR real frequencies
+ * \param[in] lambda      DLR cutoff parameter
  * \param[in] niom_dense  # Matsubara frequencies per dimension in fine grid
  * \param[in] eps         Error tolerance
  * \param[in] path        Path to directory in which to save 2D DLR Mat. freqs.
@@ -120,9 +110,8 @@ void build_dlr2d_ifrf(nda::vector<double> dlr_rf, nda::vector<int> dlr_if_fer,
  * corresponds to the method proposed in Kiese et al., "Discrete Lehmann
  * representation of three-point functions", arXiv:2405.06716.
  */
-void build_dlr2d_if_fullgrid(nda::vector<double> dlr_rf, int niom_dense,
-                             double eps, std::string path,
-                             std::string filename);
+void build_dlr2d_if_fullgrid(double lambda, int niom_dense, double eps,
+                             std::string path, std::string filename);
 
 /*!
  * \brief Read 2D DLR Matsubara frequency grid from file
