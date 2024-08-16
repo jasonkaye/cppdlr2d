@@ -10,7 +10,7 @@ namespace dlr2d {
 std::string get_filename(double lambda, double eps, int niom_dense) {
 
   std::ostringstream filenameStream;
-  filenameStream << "dlr2d_if_" << lambda << "_" << std::scientific
+  filenameStream << "dlr2d_if_fullgrid_" << lambda << "_" << std::scientific
                  << std::setprecision(2) << eps << "_" << niom_dense << ".h5";
   return filenameStream.str();
 }
@@ -19,12 +19,11 @@ std::string get_filename(double lambda, double eps, bool compressed) {
 
   std::ostringstream filenameStream;
   if (!compressed) {
-    filenameStream << "dlr2d_if_reduced_" << lambda << "_" << std::scientific
+    filenameStream << "dlr2d_if_" << lambda << "_" << std::scientific
                    << std::setprecision(2) << eps << ".h5";
   } else {
-    filenameStream << "dlr2d_if_reduced_" << lambda << "_" << std::scientific
-                   << std::setprecision(2) << eps << "_compressed"
-                   << ".h5";
+    filenameStream << "dlr2d_ifrf_" << lambda << "_" << std::scientific
+                   << std::setprecision(2) << eps << ".h5";
   }
   return filenameStream.str();
 }
@@ -32,8 +31,8 @@ std::string get_filename(double lambda, double eps, bool compressed) {
 std::string get_filename_3term(double lambda, double eps) {
 
   std::ostringstream filenameStream;
-  filenameStream << "dlr2d_if_reduced_" << lambda << "_" << std::scientific
-                 << std::setprecision(2) << eps << "_two_terms.h5";
+  filenameStream << "dlr2d_if_3term_" << lambda << "_" << std::scientific
+                 << std::setprecision(2) << eps << ".h5";
 
   return filenameStream.str();
 }
