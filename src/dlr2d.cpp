@@ -199,7 +199,7 @@ void build_dlr2d_if(double lambda, double eps, std::string path,
 
   // Singular part
   for (int k = 0; k < r; ++k) {
-    for (int n = 0; n < 3 * r * r + r; ++n) {
+    for (int n = 0; n < 3 * r * r; ++n) {
       if (nu2didx(n, 0) == -nu2didx(n, 1) - 1) {
         kmat(n, 3 * r * r + k) = k_if(nu2didx(n, 0), dlr_rf(k), Fermion);
       } else {
