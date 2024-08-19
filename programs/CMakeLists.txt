@@ -5,6 +5,7 @@ set(program_sources
   generate_dlr2d_if.cpp
   siam_vertex.cpp
   est_rank_tst.cpp
+  siam_vertex_3term.cpp
   )
 
 foreach(source_file ${program_sources})
