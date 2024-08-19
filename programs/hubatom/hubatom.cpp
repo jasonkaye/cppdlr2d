@@ -444,7 +444,7 @@ nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
   return results;
 }
 
-void hubatom_allfuncs_two_terms(double beta, double u, double lambda,
+void hubatom_allfuncs_3term(double beta, double u, double lambda,
                                 double eps, int niomtst, int nbos_tst) {
 
   auto path = "../../../dlr2d_if_data/"; // Path for DLR 2D grid data
@@ -691,7 +691,7 @@ void hubatom_allfuncs_two_terms(double beta, double u, double lambda,
   //     polarization_res(beta, ifops_fer, ifops_bos, gc, gc, lam_s_c,
   //     lam_s_csing);
   // pol_s += polarization_const(beta, itops, ifops_bos, gc, gc);
-  auto pol_s = polarization(beta, lambda, eps, itops, ifops_fer, ifops_bos, gc,
+  auto pol_s = dlr2d::polarization_3term(beta, lambda, eps, itops, ifops_fer, ifops_bos, gc,
                             gc, lam_s_c, lam_s_csing);
   pol_s *= -1.0 / 2;
 
@@ -699,14 +699,14 @@ void hubatom_allfuncs_two_terms(double beta, double u, double lambda,
   //     polarization_res(beta, ifops_fer, ifops_bos, grc, gc, lam_d_c,
   //     lam_d_csing);
   // pol_d += polarization_const(beta, itops, ifops_bos, grc, gc);
-  auto pol_d = polarization(beta, lambda, eps, itops, ifops_fer, ifops_bos, grc,
+  auto pol_d = dlr2d::polarization_3term(beta, lambda, eps, itops, ifops_fer, ifops_bos, grc,
                             gc, lam_d_c, lam_d_csing);
 
   // auto pol_m =
   //     polarization_res(beta, ifops_fer, ifops_bos, grc, gc, lam_m_c,
   //     lam_m_csing);
   // pol_m += polarization_const(beta, itops, ifops_bos, grc, gc);
-  auto pol_m = polarization(beta, lambda, eps, itops, ifops_fer, ifops_bos, grc,
+  auto pol_m = dlr2d::polarization_3term(beta, lambda, eps, itops, ifops_fer, ifops_bos, grc,
                             gc, lam_m_c, lam_m_csing);
 
   auto pol_s_c = ifops_bos.vals2coefs(beta, pol_s); // DLR expansion
