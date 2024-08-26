@@ -3,9 +3,7 @@ set(program_sources
   dlr2dfit_mf.cpp
   dlr2dsingfit_mf.cpp
   generate_dlr2d_if.cpp
-  siam_vertex.cpp
   est_rank_tst.cpp
-  siam_vertex_3term.cpp
   )
 
 foreach(source_file ${program_sources})
@@ -16,3 +14,4 @@ foreach(source_file ${program_sources})
 endforeach(source_file)
 
 add_subdirectory(hubatom)
+add_subdirectory(siam)
