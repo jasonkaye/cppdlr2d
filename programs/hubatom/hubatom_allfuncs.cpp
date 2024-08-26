@@ -11,13 +11,13 @@ int main() {
   int niomtst = 512;    // # imag freq test points (must be even)
   int nbos_tst = 64;    // # pts in test grid for polarization
   bool reduced = true;  // Full or reduced fine grid
-  bool compressbasis = false;
-  bool threeterm = false; // 2+1 or 3+1-term 2D DLR
+  bool compressbasis = false; // Overcomplete or compressed basis
+  bool threeterm = false;     // 2+1 or 3+1-term 2D DLR
 
   if (threeterm) {
     hubatom_allfuncs_3term(beta, u, lambda, eps, niomtst, nbos_tst);
   } else {
-    hubatom_allfuncs(beta, u, lambda, eps, niomtst, nbos_tst,
-                                    reduced, compressbasis, niom_dense);
+    hubatom_allfuncs(beta, u, lambda, eps, niomtst, nbos_tst, reduced,
+                     compressbasis, niom_dense);
   }
 }

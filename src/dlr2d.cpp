@@ -10,11 +10,10 @@ namespace dlr2d {
 
 // Obtain 2D DLR nodes
 
-void build_dlr2d_if_fullgrid(double lambda, int niom_dense,
-                             double eps, std::string path,
-                             std::string filename) {
+void build_dlr2d_if_fullgrid(double lambda, int niom_dense, double eps,
+                             std::string path, std::string filename) {
 
-    // Get DLR frequencies
+  // Get DLR frequencies
   auto dlr_rf = build_dlr_rf(lambda, eps);
   int r = dlr_rf.size(); // # DLR basis functions
 
@@ -259,8 +258,8 @@ void build_dlr2d_if(double lambda, double eps, std::string path,
 
 // Obtain 2D DLR nodes using reduced fine grid, mixed fermionic/bosonic
 // representation, two terms
-void build_dlr2d_if_3term(double lambda, double eps,
-                          std::string path, std::string filename) {
+void build_dlr2d_if_3term(double lambda, double eps, std::string path,
+                          std::string filename) {
 
   int rankmethod = 1;
 
@@ -413,7 +412,7 @@ void build_dlr2d_ifrf(double lambda, double eps, std::string path,
   auto dlr_if_bos = ifops_bos.get_ifnodes();
 
   // Get fine 2D Matsubara frequency sampling grid
-  auto nu2didx = nda::array<int, 2>(3 * r * r + r, 2);
+  auto nu2didx = nda::array<int, 2>(3 * r * r, 2);
   for (int m = 0; m < r; ++m) {
     for (int n = 0; n < r; ++n) {
       nu2didx(m * r + n, 0) = dlr_if_fer(m); // nu1 = (2*m_j + 1)*i*pi
@@ -430,30 +429,32 @@ void build_dlr2d_ifrf(double lambda, double eps, std::string path,
           dlr_if_bos(n) - dlr_if_fer(m) -
           1; // nu2 = 2*n_k*i*pi - (2*m_j+1)*i*pi = (2*(n_k-m_j-1)+1)*i*pi
     }
-
-    nu2didx(3 * r * r + m, 0) = dlr_if_fer(m); // nu1 = (2*m_j + 1)*i*pi
-    nu2didx(3 * r * r + m, 1) =
-        -dlr_if_fer(m) - 1; // nu2 = -(2*m_j + 1)*i*pi = (2*(-m_j-1)+1)*i*pi
   }
 
   auto nu2d = (2 * nu2didx + 1) * pi * 1i;
 
   // Get system matrix for dense grid
-  auto kmat = nda::matrix<dcomplex, F_layout>(3 * r * r + r, 3 * r * r + r);
+  auto kmat = nda::matrix<dcomplex, F_layout>(3 * r * r, 3 * r * r + r);
 
   // Regular part
   for (int k = 0; k < r; ++k) {
     for (int l = 0; l < r; ++l) {
-      for (int n = 0; n < 3 * r * r + r; ++n) {
+      for (int n = 0; n < 3 * r * r; ++n) {
 
         kmat(n, k * r + l) = k_if(nu2didx(n, 0), dlr_rf(k), Fermion) *
                              k_if(nu2didx(n, 1), dlr_rf(l), Fermion);
+        // kmat(n, r * r + k * r + l) =
+        //     k_if(nu2didx(n, 1), dlr_rf(k), Fermion) *
+        //     my_k_if_boson(nu2didx(n, 0) + nu2didx(n, 1) + 1, dlr_rf(l));
+        // kmat(n, 2 * r * r + k * r + l) =
+        //     k_if(nu2didx(n, 0), dlr_rf(k), Fermion) *
+        //     my_k_if_boson(nu2didx(n, 0) + nu2didx(n, 1) + 1, dlr_rf(l));
         kmat(n, r * r + k * r + l) =
             k_if(nu2didx(n, 1), dlr_rf(k), Fermion) *
-            my_k_if_boson(nu2didx(n, 0) + nu2didx(n, 1) + 1, dlr_rf(l));
+            k_if(nu2didx(n, 0) + nu2didx(n, 1) + 1, dlr_rf(l), Boson);
         kmat(n, 2 * r * r + k * r + l) =
             k_if(nu2didx(n, 0), dlr_rf(k), Fermion) *
-            my_k_if_boson(nu2didx(n, 0) + nu2didx(n, 1) + 1, dlr_rf(l));
+            k_if(nu2didx(n, 0) + nu2didx(n, 1) + 1, dlr_rf(l), Boson);
 
         // kmat(n, k * r + l) =
         //     ker(nu2d(n, 0), dlr_rf(k)) * ker(nu2d(n, 1), dlr_rf(l));
@@ -468,7 +469,7 @@ void build_dlr2d_ifrf(double lambda, double eps, std::string path,
 
   // Singular part
   for (int k = 0; k < r; ++k) {
-    for (int n = 0; n < 3 * r * r + r; ++n) {
+    for (int n = 0; n < 3 * r * r; ++n) {
       if (nu2didx(n, 0) == -nu2didx(n, 1) - 1) {
         kmat(n, 3 * r * r + k) = k_if(nu2didx(n, 0), dlr_rf(k), Fermion);
       } else {
@@ -509,7 +510,7 @@ void build_dlr2d_ifrf(double lambda, double eps, std::string path,
   }
 
   // Extract basis functions from pivots
-  auto dlr2d_rfidx = nda::array<int, 2>(r2d, 4);
+  auto dlr2d_rfidx = nda::array<int, 2>(r2d, 3);
   int idx = 0;
   double k = 0, l = 0;
   for (int i = 0; i < r2d; ++i) {
@@ -535,7 +536,7 @@ void build_dlr2d_ifrf(double lambda, double eps, std::string path,
     }
   }
 
-  auto kmat2 = nda::matrix<dcomplex, F_layout>(r2d, 3 * r * r + r);
+  auto kmat2 = nda::matrix<dcomplex, F_layout>(r2d, 3 * r * r);
   for (int k = 0; k < r2d; ++k) {
     kmat2(k, _) = kmat_copy(_, piv(k));
   }
@@ -677,22 +678,28 @@ build_cf2if_square(double beta, nda::vector<double> dlr_rf,
   auto kmat = nda::matrix<dcomplex, F_layout>(r2d, r2d);
 
   // Regular part
-  double omk = 0, oml = 0;
+  int k = 0, l = 0;
   for (int i = 0; i < r2d; ++i) {
-    omk = dlr_rf(dlr2d_rfidx(i, 1));
-    oml = dlr_rf(dlr2d_rfidx(i, 2));
+    k = dlr2d_rfidx(i, 1);
+    l = dlr2d_rfidx(i, 2);
     for (int n = 0; n < r2d; ++n) {
       if (dlr2d_rfidx(i, 0) == 0) {
-        kmat(n, i) = beta * beta * k_if(dlr2d_if(n, 0), omk, Fermion) *
-                     k_if(dlr2d_if(n, 1), oml, Fermion);
+        kmat(n, i) = beta * beta * k_if(dlr2d_if(n, 0), dlr_rf(k), Fermion) *
+                     k_if(dlr2d_if(n, 1), dlr_rf(l), Fermion);
       } else if (dlr2d_rfidx(i, 0) == 1) {
-        kmat(n, i) = beta * beta * k_if(dlr2d_if(n, 1), omk, Fermion) *
-                     my_k_if_boson(dlr2d_if(n, 0) + dlr2d_if(n, 1) + 1, oml);
+        kmat(n, i) =
+            beta * beta * k_if(dlr2d_if(n, 1), dlr_rf(k), Fermion) *
+            k_if(dlr2d_if(n, 0) + dlr2d_if(n, 1) + 1, dlr_rf(l), Boson);
       } else if (dlr2d_rfidx(i, 0) == 2) {
-        kmat(n, i) = beta * beta * k_if(dlr2d_if(n, 0), omk, Fermion) *
-                     my_k_if_boson(dlr2d_if(n, 0) + dlr2d_if(n, 1) + 1, oml);
+        kmat(n, i) =
+            beta * beta * k_if(dlr2d_if(n, 0), dlr_rf(k), Fermion) *
+            k_if(dlr2d_if(n, 0) + dlr2d_if(n, 1) + 1, dlr_rf(l), Boson);
       } else {
-        kmat(n, i) = beta * k_if(dlr2d_if(n, 0), omk, Fermion);
+        if (dlr2d_if(n, 0) == -dlr2d_if(n, 1) - 1) {
+          kmat(n, i) = beta * beta * k_if(dlr2d_if(n, 0), dlr_rf(k), Fermion);
+        } else {
+          kmat(n, i) = 0;
+        }
       }
     }
   }

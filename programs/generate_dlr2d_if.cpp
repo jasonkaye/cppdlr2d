@@ -1,9 +1,7 @@
 #include "../src/dlr2d.hpp"
 #include "../src/utils.hpp"
-#include <cppdlr/cppdlr.hpp>
 #include <fmt/format.h>
 
-using namespace cppdlr;
 using namespace dlr2d;
 
 /*!
@@ -26,14 +24,15 @@ using namespace dlr2d;
 int main() {
 
   double eps = 1e-12;                 // DLR tolerance
-  bool threeterm = true;              // 2+1 or 3+1-term 2D DLR
+  bool threeterm = false;             // 2+1 or 3+1-term 2D DLR
+  bool compressbasis = true;          // Overcomplete or compressed basis
   auto path = "../../dlr2d_if_data/"; // Path for DLR 2D grid data
 
   // auto lambdas = nda::vector<double>(
   //     {1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0, 256.0, 512.0, 1024.0});
-  auto lambdas =
-      nda::vector<double>({1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0});
-  // auto lambdas = nda::vector<double>({300.0});
+  // auto lambdas =
+  //     nda::vector<double>({1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0});
+  auto lambdas = nda::vector<double>({64.0});
 
   for (int i = 0; i < lambdas.size(); i++) {
 
@@ -42,6 +41,9 @@ int main() {
     if (threeterm) {
       auto filename = get_filename_3term(lambdas(i), eps);
       build_dlr2d_if_3term(lambdas(i), eps, path, filename);
+    } else if (compressbasis) {
+      auto filename = get_filename(lambdas(i), eps, true);
+      build_dlr2d_ifrf(lambdas(i), eps, path, filename);
     } else {
       auto filename = get_filename(lambdas(i), eps);
       build_dlr2d_if(lambdas(i), eps, path, filename);
