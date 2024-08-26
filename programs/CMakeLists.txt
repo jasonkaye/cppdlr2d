@@ -1,7 +1,5 @@
 
 set(program_sources
-  dlr2dfit_mf.cpp
-  dlr2dsingfit_mf.cpp
   generate_dlr2d_if.cpp
   est_rank_tst.cpp
   )
