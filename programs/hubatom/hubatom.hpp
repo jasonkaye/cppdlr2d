@@ -64,7 +64,7 @@ nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
  * \return Vector containing problem parameters and errors, for analysis and
  * plotting
  */
-void hubatom_allfuncs_3term(double beta, double u, double lambda,
+nda::vector<double> hubatom_allfuncs_3term(double beta, double u, double lambda,
                                 double eps, int niomtst, int nbos_tst);
 
 /*!

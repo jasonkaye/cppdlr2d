@@ -444,7 +444,7 @@ nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
   return results;
 }
 
-void hubatom_allfuncs_3term(double beta, double u, double lambda,
+nda::vector<double> hubatom_allfuncs_3term(double beta, double u, double lambda,
                                 double eps, int niomtst, int nbos_tst) {
 
   auto path = "../../../dlr2d_if_data/"; // Path for DLR 2D grid data
@@ -778,6 +778,52 @@ void hubatom_allfuncs_3term(double beta, double u, double lambda,
   fmt::print("Linf norm:  {}\n", pol_m_linf);
   fmt::print("L2 error:   {}\n", pol_m_l2err);
   fmt::print("Linf error: {}\n\n", pol_m_linferr);
+
+  auto results = nda::vector<double>(42);
+  results(0) = beta;
+  results(1) = u;
+  results(2) = lambda;
+  results(3) = eps;
+  results(4) = r;
+  results(5) = niom;
+  results(6) = chi_s_l2;
+  results(7) = chi_s_linf;
+  results(8) = chi_s_l2err;
+  results(9) = chi_s_linferr;
+  results(10) = chi_d_l2;
+  results(11) = chi_d_linf;
+  results(12) = chi_d_l2err;
+  results(13) = chi_d_linferr;
+  results(14) = chi_m_l2;
+  results(15) = chi_m_linf;
+  results(16) = chi_m_l2err;
+  results(17) = chi_m_linferr;
+  results(18) = lam_s_l2;
+  results(19) = lam_s_linf;
+  results(20) = lam_s_l2err;
+  results(21) = lam_s_linferr;
+  results(22) = lam_d_l2;
+  results(23) = lam_d_linf;
+  results(24) = lam_d_l2err;
+  results(25) = lam_d_linferr;
+  results(26) = lam_m_l2;
+  results(27) = lam_m_linf;
+  results(28) = lam_m_l2err;
+  results(29) = lam_m_linferr;
+  results(30) = pol_s_l2;
+  results(31) = pol_s_linf;
+  results(32) = pol_s_l2err;
+  results(33) = pol_s_linferr;
+  results(34) = pol_d_l2;
+  results(35) = pol_d_linf;
+  results(36) = pol_d_l2err;
+  results(37) = pol_d_linferr;
+  results(38) = pol_m_l2;
+  results(39) = pol_m_linf;
+  results(40) = pol_m_l2err;
+  results(41) = pol_m_linferr;
+
+  return results;
 }
 
 // NOTE: for now, unfortunately, nu means i*nu; change this in the future
