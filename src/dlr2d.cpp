@@ -216,14 +216,14 @@ void build_dlr2d_if(double lambda, double eps, std::string path,
   // Pivoted QR to determine sampling nodes
   auto kmatt = nda::matrix<dcomplex, F_layout>(transpose(kmat));
   auto start = std::chrono::high_resolution_clock::now();
-  auto piv = nda::zeros<int>(3 * r * r + r);
-  auto tau = nda::vector<dcomplex>(3 * r * r + r);
+  auto piv = nda::zeros<int>(3 * r * r);
+  auto tau = nda::vector<dcomplex>(3 * r * r);
   nda::lapack::geqp3(kmatt, piv, tau);
 
   // Estimate rank
   int niom_skel = 0;
   if (rankmethod == 1) {
-    for (int k = 0; k < 3 * r * r + r; ++k) {
+    for (int k = 0; k < 3 * r * r; ++k) {
       if (abs(kmatt(k, k)) < eps) {
         niom_skel = k;
         break;
@@ -231,7 +231,7 @@ void build_dlr2d_if(double lambda, double eps, std::string path,
     }
   } else {
     double errsq = 0;
-    for (int k = 3 * r * r + r - 1; k >= 0; --k) {
+    for (int k = 3 * r * r - 1; k >= 0; --k) {
       errsq += pow(abs(kmatt(k, k)), 2);
       if (sqrt(errsq) > eps) {
         niom_skel = k;
@@ -351,14 +351,14 @@ void build_dlr2d_if_3term(double lambda, double eps,
   // Pivoted QR to determine sampling nodes
   auto kmatt = nda::matrix<dcomplex, F_layout>(transpose(kmat));
   auto start = std::chrono::high_resolution_clock::now();
-  auto piv = nda::zeros<int>(2 * r * r + r);
-  auto tau = nda::vector<dcomplex>(2 * r * r + r);
+  auto piv = nda::zeros<int>(2 * r * r);
+  auto tau = nda::vector<dcomplex>(2 * r * r);
   nda::lapack::geqp3(kmatt, piv, tau);
 
   // Estimate rank
   int niom_skel = 0;
   if (rankmethod == 1) {
-    for (int k = 0; k < 2 * r * r + r; ++k) {
+    for (int k = 0; k < 2 * r * r; ++k) {
       if (abs(kmatt(k, k)) < eps) {
         niom_skel = k;
         break;
@@ -366,7 +366,7 @@ void build_dlr2d_if_3term(double lambda, double eps,
     }
   } else {
     double errsq = 0;
-    for (int k = 2 * r * r + r - 1; k >= 0; --k) {
+    for (int k = 2 * r * r - 1; k >= 0; --k) {
       errsq += pow(abs(kmatt(k, k)), 2);
       if (sqrt(errsq) > eps) {
         niom_skel = k;
