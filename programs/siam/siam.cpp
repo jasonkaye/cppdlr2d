@@ -9,7 +9,8 @@ using namespace dlr2d;
 
 nda::vector<double> siam_allfuncs(double beta, double u, double lambda,
                                   double eps, int niomtst, int nbos_tst,
-                                  bool reduced, int niom_dense) {
+                                  bool reduced, bool compressbasis,
+                                  int niom_dense) {
 
   auto path = "../../../dlr2d_if_data/"; // Path for DLR 2D grid data
   auto datafile =
@@ -26,9 +27,16 @@ nda::vector<double> siam_allfuncs(double beta, double u, double lambda,
   if (!reduced) {
     filename = get_filename(lambda, eps, niom_dense);
   } else {
-    filename = get_filename(lambda, eps);
+    filename = get_filename(lambda, eps, compressbasis);
   }
-  auto dlr2d_if = read_dlr2d_if(path, filename);
+
+  auto dlr2d_if = nda::array<int, 2>();
+  auto dlr2d_rfidx = nda::array<int, 2>();
+  if (!compressbasis) {
+    dlr2d_if = read_dlr2d_if(path, filename);
+  } else {
+    std::tie(dlr2d_rfidx, dlr2d_if) = read_dlr2d_rfif(path, filename);
+  }
 
   // Get DLR nodes for particle-hole channel
   auto dlr2d_if_ph = nda::array<int, 2>(dlr2d_if.shape());
@@ -42,17 +50,21 @@ nda::vector<double> siam_allfuncs(double beta, double u, double lambda,
   fmt::print("\nDLR cutoff Lambda = {}\n", lambda);
   fmt::print("DLR tolerance epsilon = {}\n", eps);
   fmt::print("# DLR basis functions = {}\n", r);
-  fmt::print("# imag freq in fine grid = {}\n\n", niom_dense);
 
   // Build kernel matrix
-  auto kmat = build_cf2if(beta, dlr_rf, dlr2d_if);
+  auto kmat = nda::matrix<dcomplex>();
+  if (!compressbasis) {
+    kmat = build_cf2if(beta, dlr_rf, dlr2d_if);
+  } else {
+    kmat = build_cf2if_square(beta, dlr_rf, dlr2d_rfidx, dlr2d_if);
+  }
   int niom = dlr2d_if.shape(0);
 
   if (!reduced) {
     fmt::print("Fine system matrix shape = {} x {}\n", niom_dense * niom_dense,
                3 * r * r + r);
   } else {
-    fmt::print("Fine system matrix shape = {} x {}\n", 3 * r * r + r,
+    fmt::print("Fine system matrix shape = {} x {}\n", 3 * r * r,
                3 * r * r + r);
   }
 
@@ -132,47 +144,67 @@ nda::vector<double> siam_allfuncs(double beta, double u, double lambda,
   }
 
   fmt::print("Obtaining DLR coefficients of chi, lambda...\n");
+  auto chi_s_c = nda::array<dcomplex, 3>();
+  auto chi_d_c = nda::array<dcomplex, 3>();
+  auto chi_m_c = nda::array<dcomplex, 3>();
+  auto lam_s_c = nda::array<dcomplex, 3>();
+  auto lam_d_c = nda::array<dcomplex, 3>();
+  auto lam_m_c = nda::array<dcomplex, 3>();
+  auto chi_s_csing = nda::array<dcomplex, 1>();
+  auto chi_d_csing = nda::array<dcomplex, 1>();
+  auto chi_m_csing = nda::array<dcomplex, 1>();
+  auto lam_s_csing = nda::array<dcomplex, 1>();
+  auto lam_d_csing = nda::array<dcomplex, 1>();
+  auto lam_m_csing = nda::array<dcomplex, 1>();
+
   auto start = std::chrono::high_resolution_clock::now();
+  if (!compressbasis) {
+    auto valsall = nda::array<dcomplex, 2, F_layout>(niom, 6);
+    valsall(_, 0) = chi_s;
+    valsall(_, 1) = chi_d;
+    valsall(_, 2) = chi_m;
+    valsall(_, 3) = lam_s;
+    valsall(_, 4) = lam_d;
+    valsall(_, 5) = lam_m;
 
-  auto valsall = nda::array<dcomplex, 2, F_layout>(niom, 6);
-  valsall(_, 0) = chi_s;
-  valsall(_, 1) = chi_d;
-  valsall(_, 2) = chi_m;
-  valsall(_, 3) = lam_s;
-  valsall(_, 4) = lam_d;
-  valsall(_, 5) = lam_m;
+    auto [coefsall, coefsingall] = vals2coefs_if_many(kmat, valsall, r);
 
-  auto [coefsall, coefsingall] = vals2coefs_if_many(kmat, valsall, r);
+    chi_s_c = coefsall(0, _, _, _);
+    chi_d_c = coefsall(1, _, _, _);
+    chi_m_c = coefsall(2, _, _, _);
+    lam_s_c = coefsall(3, _, _, _);
+    lam_d_c = coefsall(4, _, _, _);
+    lam_m_c = coefsall(5, _, _, _);
+    chi_s_csing = coefsingall(0, _);
+    chi_d_csing = coefsingall(1, _);
+    chi_m_csing = coefsingall(2, _);
+    lam_s_csing = coefsingall(3, _);
+    lam_d_csing = coefsingall(4, _);
+    lam_m_csing = coefsingall(5, _);
 
-  auto chi_s_c = coefsall(0, _, _, _);
-  auto chi_d_c = coefsall(1, _, _, _);
-  auto chi_m_c = coefsall(2, _, _, _);
-  auto lam_s_c = coefsall(3, _, _, _);
-  auto lam_d_c = coefsall(4, _, _, _);
-  auto lam_m_c = coefsall(5, _, _, _);
-  auto chi_s_csing = coefsingall(0, _);
-  auto chi_d_csing = coefsingall(1, _);
-  auto chi_m_csing = coefsingall(2, _);
-  auto lam_s_csing = coefsingall(3, _);
-  auto lam_d_csing = coefsingall(4, _);
-  auto lam_m_csing = coefsingall(5, _);
+  } else {
+    auto chi_s_c_compressed = vals2coefs_if_square(kmat, chi_s);
+    auto chi_d_c_compressed = vals2coefs_if_square(kmat, chi_d);
+    auto chi_m_c_compressed = vals2coefs_if_square(kmat, chi_m);
+    auto lam_s_c_compressed = vals2coefs_if_square(kmat, lam_s);
+    auto lam_d_c_compressed = vals2coefs_if_square(kmat, lam_d);
+    auto lam_m_c_compressed = vals2coefs_if_square(kmat, lam_m);
 
-  // auto [chi_s_c, chi_s_csing] = dlr2d_vals2coefs(kmat, chi_s, r);
-  // auto [chi_d_c, chi_d_csing] = dlr2d_vals2coefs(kmat, chi_d, r);
-  // auto [chi_m_c, chi_m_csing] = dlr2d_vals2coefs(kmat, chi_m, r);
-  // auto [lam_s_c, lam_s_csing] = dlr2d_vals2coefs(kmat, lam_s, r);
-  // auto [lam_d_c, lam_d_csing] = dlr2d_vals2coefs(kmat, lam_d, r);
-  // auto [lam_m_c, lam_m_csing] = dlr2d_vals2coefs(kmat, lam_m, r);
-
+    std::tie(chi_s_c, chi_s_csing) =
+        uncompress_basis(r, dlr2d_rfidx, chi_s_c_compressed);
+    std::tie(chi_d_c, chi_d_csing) =
+        uncompress_basis(r, dlr2d_rfidx, chi_d_c_compressed);
+    std::tie(chi_m_c, chi_m_csing) =
+        uncompress_basis(r, dlr2d_rfidx, chi_m_c_compressed);
+    std::tie(lam_s_c, lam_s_csing) =
+        uncompress_basis(r, dlr2d_rfidx, lam_s_c_compressed);
+    std::tie(lam_d_c, lam_d_csing) =
+        uncompress_basis(r, dlr2d_rfidx, lam_d_c_compressed);
+    std::tie(lam_m_c, lam_m_csing) =
+        uncompress_basis(r, dlr2d_rfidx, lam_m_c_compressed);
+  }
   auto end = std::chrono::high_resolution_clock::now();
   fmt::print("Time: {}\n", std::chrono::duration<double>(end - start).count());
-
-  // for (int k = 0; k < r; ++k) {
-  //   for (int l = 0; l < r; ++l) {
-  //     chi_s_c(1, k, l) /= std::tanh(dlr_rf(l)/2);
-  //     chi_s_c(2, k, l) /= std::tanh(dlr_rf(l)/2);
-  //   }
-  // }
 
   // Test expansion of G
   fmt::print("Testing DLR expansion of Green's function...\n");
@@ -233,7 +265,8 @@ nda::vector<double> siam_allfuncs(double beta, double u, double lambda,
     }
   }
   end = std::chrono::high_resolution_clock::now();
-  fmt::print("Time: {}\n", std::chrono::duration<double>(end - start).count());
+  fmt::print("Time: {}\n\n",
+             std::chrono::duration<double>(end - start).count());
 
   double chi_s_l2 = sqrt(sum(pow(abs(chi_s_tru), 2))) / beta / beta;
   double chi_d_l2 = sqrt(sum(pow(abs(chi_d_tru), 2))) / beta / beta;
