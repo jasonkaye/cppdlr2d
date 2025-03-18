@@ -27,6 +27,8 @@ namespace dlr2d {
 void build_dlr2d_if(double lambda, double eps, std::string path,
                     std::string filename);
 
+nda::array<int, 2> build_dlr2d_if(double lambda, double eps);
+
 /*!
  * \brief Obtain 2D DLR Matsubara frequency grid using three-term DLR
  *
@@ -49,6 +51,8 @@ void build_dlr2d_if(double lambda, double eps, std::string path,
  */
 void build_dlr2d_if_3term(double lambda, double eps, std::string path,
                           std::string filename);
+
+nda::array<int, 2> build_dlr2d_if_3term(double lambda, double eps);
 
 /*!
  * \brief Obtain 2D DLR Matsubara frequency grid and compressed 2D DLR real
@@ -84,6 +88,8 @@ void build_dlr2d_if_3term(double lambda, double eps, std::string path,
 void build_dlr2d_ifrf(double lambda, double eps, std::string path,
                       std::string filename);
 
+std::pair<nda::array<int, 2>, nda::array<int, 2>> build_dlr2d_ifrf(double lambda, double eps);
+
 /*!
  * \brief Obtain 2D DLR Matsubara frequency grid, using all Matsubara
  * frequencies up to specified cutoff as fine grid
@@ -112,6 +118,8 @@ void build_dlr2d_ifrf(double lambda, double eps, std::string path,
  */
 void build_dlr2d_if_fullgrid(double lambda, int niom_dense, double eps,
                              std::string path, std::string filename);
+
+nda::array<int, 2> build_dlr2d_if_fullgrid(double lambda, int niom_dense, double eps);
 
 /*!
  * \brief Read 2D DLR Matsubara frequency grid from file

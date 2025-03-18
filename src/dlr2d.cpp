@@ -11,8 +11,7 @@ using std::numbers::pi;
 
 // Obtain 2D DLR nodes
 
-void build_dlr2d_if_fullgrid(double lambda, int niom_dense, double eps,
-                             std::string path, std::string filename) {
+nda::array<int, 2> build_dlr2d_if_fullgrid(double lambda, int niom_dense, double eps) {
 
   // Get DLR frequencies
   auto dlr_rf = build_dlr_rf(lambda, eps);
@@ -97,13 +96,20 @@ void build_dlr2d_if_fullgrid(double lambda, int niom_dense, double eps,
     dlr2d_if(k, 1) = n2 - niom_dense / 2;
   }
 
+  fmt::print("DLR rank squared = {}\n", r * r);
+  fmt::print("System matrix rank = {}\n\n", niom_skel);
+
+  return dlr2d_if;
+}
+
+void build_dlr2d_if_fullgrid(double lambda, int niom_dense, double eps,
+                             std::string path, std::string filename) {
+  auto dlr2d_if = build_dlr2d_if_fullgrid(lambda, niom_dense, eps);
+
   // Write dlr2d_if to hdf5 file
   h5::file file(path + filename, 'w');
   h5::group mygroup(file);
   h5::write(mygroup, "dlr2d_if", dlr2d_if);
-
-  fmt::print("DLR rank squared = {}\n", r * r);
-  fmt::print("System matrix rank = {}\n\n", niom_skel);
 }
 
 nda::array<int, 2> read_dlr2d_if(std::string path, std::string filename) {
@@ -122,8 +128,7 @@ read_dlr2d_rfif(std::string path, std::string filename) {
   return {dlr2d_rfidx, dlr2d_if};
 }
 
-void build_dlr2d_if(double lambda, double eps, std::string path,
-                    std::string filename) {
+nda::array<int, 2> build_dlr2d_if(double lambda, double eps) {
 
   int rankmethod = 1;
 
@@ -248,19 +253,25 @@ void build_dlr2d_if(double lambda, double eps, std::string path,
     dlr2d_if(k, 1) = nu2didx(piv(k), 1);
   }
 
+  fmt::print("DLR rank squared = {}\n", r * r);
+  fmt::print("System matrix rank = {}\n\n", niom_skel);
+
+  return dlr2d_if;
+}
+
+void build_dlr2d_if(double lambda, double eps, std::string path,
+                    std::string filename) {
+  auto dlr2d_if = build_dlr2d_if(lambda, eps);
+
   // Write dlr2d_if to hdf5 file
   h5::file file(path + filename, 'w');
   h5::group mygroup(file);
   h5::write(mygroup, "dlr2d_if", dlr2d_if);
-
-  fmt::print("DLR rank squared = {}\n", r * r);
-  fmt::print("System matrix rank = {}\n\n", niom_skel);
 }
 
 // Obtain 2D DLR nodes using reduced fine grid, mixed fermionic/bosonic
 // representation, two terms
-void build_dlr2d_if_3term(double lambda, double eps, std::string path,
-                          std::string filename) {
+nda::array<int, 2> build_dlr2d_if_3term(double lambda, double eps) {
 
   int rankmethod = 1;
 
@@ -383,18 +394,24 @@ void build_dlr2d_if_3term(double lambda, double eps, std::string path,
     dlr2d_if(k, 1) = nu2didx(piv(k), 1);
   }
 
+  fmt::print("DLR rank squared = {}\n", r * r);
+  fmt::print("System matrix rank = {}\n\n", niom_skel);
+
+  return dlr2d_if;
+}
+
+void build_dlr2d_if_3term(double lambda, double eps, std::string path,
+                          std::string filename) {
+  auto dlr2d_if = build_dlr2d_if_3term(lambda, eps);
+
   // Write dlr2d_if to hdf5 file
   h5::file file(path + filename, 'w');
   h5::group mygroup(file);
   h5::write(mygroup, "dlr2d_if", dlr2d_if);
-
-  fmt::print("DLR rank squared = {}\n", r * r);
-  fmt::print("System matrix rank = {}\n\n", niom_skel);
 }
 
 // Obtain 2D DLR nodes using reduced fine grid, recompression of basis
-void build_dlr2d_ifrf(double lambda, double eps, std::string path,
-                      std::string filename) {
+std::pair<nda::array<int, 2>, nda::array<int, 2>> build_dlr2d_ifrf(double lambda, double eps) {
 
   int rankmethod = 1;
 
@@ -552,14 +569,21 @@ void build_dlr2d_ifrf(double lambda, double eps, std::string path,
     dlr2d_if(k, 1) = nu2didx(piv(k), 1);
   }
 
+  fmt::print("DLR rank squared = {}\n", r * r);
+  fmt::print("System matrix rank = {}\n\n", r2d);
+
+  return std::make_pair(dlr2d_rfidx, dlr2d_if);
+}
+
+void build_dlr2d_ifrf(double lambda, double eps, std::string path,
+                      std::string filename) {
+  auto [dlr2d_rfidx, dlr2d_if] = build_dlr2d_ifrf(lambda, eps);
+
   // Write data to hdf5 file
   h5::file file(path + filename, 'w');
   h5::group mygroup(file);
   h5::write(mygroup, "dlr2d_rfidx", dlr2d_rfidx);
   h5::write(mygroup, "dlr2d_if", dlr2d_if);
-
-  fmt::print("DLR rank squared = {}\n", r * r);
-  fmt::print("System matrix rank = {}\n\n", r2d);
 }
 
 fmatrix build_cf2if(double beta, nda::vector<double> dlr_rf, nda::array<int, 2> dlr2d_if) {
