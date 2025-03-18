@@ -1,11 +1,7 @@
 #include "siam.hpp"
 #include "../src/utils.hpp"
-#include <fmt/format.h>
-#include <numbers>
 
-using namespace cppdlr;
-using namespace std::numbers;
-using namespace dlr2d;
+#include <fmt/format.h>
 
 nda::vector<double> siam_allfuncs(double beta, double u, double lambda,
                                   double eps, int niomtst, int nbos_tst,
@@ -159,7 +155,7 @@ nda::vector<double> siam_allfuncs(double beta, double u, double lambda,
 
   auto start = std::chrono::high_resolution_clock::now();
   if (!compressbasis) {
-    auto valsall = nda::array<dcomplex, 2, F_layout>(niom, 6);
+    auto valsall  = fmatrix(niom, 6);
     valsall(_, 0) = chi_s;
     valsall(_, 1) = chi_d;
     valsall(_, 2) = chi_m;
@@ -622,7 +618,7 @@ nda::vector<double> siam_allfuncs_3term(double beta, double u, double lambda,
   fmt::print("Obtaining DLR coefficients of chi, lambda...\n");
   auto start = std::chrono::high_resolution_clock::now();
 
-  auto valsall = nda::array<dcomplex, 2, F_layout>(niom, 6);
+  auto valsall  = fmatrix(niom, 6);
   valsall(_, 0) = chi_s;
   valsall(_, 1) = chi_d;
   valsall(_, 2) = chi_m;

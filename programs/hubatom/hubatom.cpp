@@ -1,10 +1,7 @@
 #include "hubatom.hpp"
 #include "../src/utils.hpp"
 #include <fmt/format.h>
-#include <numbers>
 
-using namespace cppdlr;
-using namespace std::numbers;
 using namespace dlr2d;
 
 nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
@@ -120,7 +117,7 @@ nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
 
   auto start = std::chrono::high_resolution_clock::now();
   if (!compressbasis) {
-    auto valsall = nda::array<dcomplex, 2, F_layout>(niom, 6);
+    auto valsall  = fmatrix(niom, 6);
     valsall(_, 0) = chi_s;
     valsall(_, 1) = chi_d;
     valsall(_, 2) = chi_m;
@@ -538,7 +535,7 @@ nda::vector<double> hubatom_allfuncs_3term(double beta, double u, double lambda,
   auto lam_m_csing = nda::array<dcomplex, 1>();
 
   auto start = std::chrono::high_resolution_clock::now();
-  auto valsall = nda::array<dcomplex, 2, F_layout>(niom, 6);
+  auto valsall  = fmatrix(niom, 6);
   valsall(_, 0) = chi_s;
   valsall(_, 1) = chi_d;
   valsall(_, 2) = chi_m;

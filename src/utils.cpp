@@ -1,9 +1,6 @@
 #include "utils.hpp"
-#include <fstream>
-#include <numbers>
 
-using namespace cppdlr;
-using namespace std::numbers;
+#include <iomanip>
 
 namespace dlr2d {
 
@@ -51,8 +48,7 @@ std::string get_filename_3term(double lambda, double eps) {
 // proportional to nvec. Larger values of alpha lead to a less optimal estimate
 // of the rank, so the most optimal solution is obtained by choosing alpha close
 // to 1 and a correspondingly large value of nvec.
-int estimate_rank(nda::matrix_const_view<dcomplex, F_layout> a, double eps,
-                  double alpha, int nvec) {
+int estimate_rank(fmatrix_const_view a, double eps, double alpha, int nvec) {
   int n = a.shape(0);
 
   // Set up random number generator
@@ -69,7 +65,7 @@ int estimate_rank(nda::matrix_const_view<dcomplex, F_layout> a, double eps,
   }
 
   // Extract upper triangular matrix R
-  auto r = nda::matrix<dcomplex, F_layout>(n, n);
+  auto r = fmatrix(n, n);
   for (int i = 0; i < n; ++i) {
     for (int j = i; j < n; ++j) {
       r(i, j) = a(i, j);
@@ -132,7 +128,7 @@ std::complex<double> my_k_if_boson(int n, double om) {
 // Get bosonic DLR Matsubara frequency grid with modified kernel
 nda::vector<int> get_dlr_if_boson(double lambda,
                                   nda::vector_const_view<double> dlr_rf) {
-  int nmax = fineparams(lambda).nmax;
+  int nmax          = cppdlr::fineparams(lambda).nmax;
   int r = dlr_rf.size();
   auto dlr_if_boson = nda::vector<int>(r);
 
@@ -144,7 +140,7 @@ nda::vector<int> get_dlr_if_boson(double lambda,
     }
   }
 
-  auto [q, norms, piv] = pivrgs(kmat, 1e-100);
+  auto [q, norms, piv] = cppdlr::pivrgs(kmat, 1e-100);
   std::sort(piv.begin(), piv.end()); // Sort pivots in ascending order
   for (int i = 0; i < r; ++i) {
     dlr_if_boson(i) = piv(i) - nmax;

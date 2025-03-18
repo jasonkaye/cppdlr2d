@@ -2,9 +2,18 @@
 #include "cppdlr/cppdlr.hpp"
 #include "nda/nda.hpp"
 
+#include <numbers>
+#include <string>
+
 namespace dlr2d {
 
-/*!
+  using namespace cppdlr;
+  using std::numbers::pi;
+
+  using fmatrix            = nda::matrix<dcomplex, nda::F_layout>;
+  using fmatrix_const_view = nda::matrix_const_view<dcomplex, nda::F_layout>;
+
+  /*!
  * \brief Get standard filename used by \ref build_dlr2d_if_fullgrid to store 2D
  * Matsubara frequency DLR grid
  *
@@ -69,7 +78,7 @@ std::string get_filename_3term(double lambda, double eps);
  * RESULTS IN LIMITED TESTING, AND SHOULD BE USED WITH CAUTION UNTIL FURTHER
  * TESTING IS DONE.
  */
-int estimate_rank(nda::matrix_const_view<dcomplex, F_layout> a, double eps,
+int estimate_rank(fmatrix_const_view a, double eps,
                   double alpha, int nvec);
 
 /*!
@@ -82,7 +91,7 @@ int estimate_rank(nda::matrix_const_view<dcomplex, F_layout> a, double eps,
  *
  * \note TODO: This function is old and should be removed.
  */
-std::complex<double> ker(std::complex<double> nu, double om);
+dcomplex ker(dcomplex nu, double om);
 
 /*!
  * \brief Alternative definition of bosonic imaginary frequency kernel
@@ -94,7 +103,7 @@ std::complex<double> ker(std::complex<double> nu, double om);
  *
  * \note TODO: This function is old and should probably be removed.
  */
-std::complex<double> my_k_if_boson(int n, double om);
+dcomplex my_k_if_boson(int n, double om);
 
 /*!
  * \brief Obtain bosonic 1D DLR Matsubara frequencies using alternative

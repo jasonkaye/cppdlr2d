@@ -1,6 +1,6 @@
 #pragma once
-#include "cppdlr/cppdlr.hpp"
-#include "nda/nda.hpp"
+
+#include "utils.hpp"
 
 namespace dlr2d {
 
@@ -162,9 +162,7 @@ read_dlr2d_rfif(std::string path, std::string filename);
  *
  * \return Coefficients to values matrix
  */
-nda::matrix<dcomplex, F_layout> build_cf2if(double beta,
-                                            nda::vector<double> dlr_rf,
-                                            nda::array<int, 2> dlr2d_if);
+fmatrix build_cf2if(double beta, nda::vector<double> dlr_rf, nda::array<int, 2> dlr2d_if);
 
 /*!
  * \brief Build matrix which maps coefficients of a 2D DLR expansion to its
@@ -181,9 +179,7 @@ nda::matrix<dcomplex, F_layout> build_cf2if(double beta,
  *
  * \return Coefficients to values matrix
  */
-nda::matrix<dcomplex, F_layout> build_cf2if_3term(double beta,
-                                                  nda::vector<double> dlr_rf,
-                                                  nda::array<int, 2> dlr2d_if);
+fmatrix build_cf2if_3term(double beta, nda::vector<double> dlr_rf, nda::array<int, 2> dlr2d_if);
 
 /*!
  * \brief Build matrix which maps coefficients of a 2D DLR expansion to its
@@ -201,9 +197,7 @@ nda::matrix<dcomplex, F_layout> build_cf2if_3term(double beta,
  *
  * \return Coefficients to values matrix
  */
-nda::matrix<dcomplex, F_layout>
-build_cf2if_square(double beta, nda::vector<double> dlr_rf,
-                   nda::array<int, 2> dlr2d_rfidx, nda::array<int, 2> dlr2d_if);
+fmatrix build_cf2if_square(double beta, nda::vector<double> dlr_rf, nda::array<int, 2> dlr2d_rfidx, nda::array<int, 2> dlr2d_if);
 
 /*!
  * \brief Transform values of a 2D DLR expansion on the 2D DLR imaginary
@@ -217,9 +211,8 @@ build_cf2if_square(double beta, nda::vector<double> dlr_rf,
  *
  * \note The matrix \p cf2if should be obtained using \ref build_cf2if.
  */
-std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>>
-vals2coefs_if(nda::matrix<dcomplex, F_layout> cf2if,
-              nda::vector_const_view<dcomplex> vals, int r);
+std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>> vals2coefs_if(fmatrix cf2if, nda::vector_const_view<dcomplex> vals,
+                                                                           int r);
 
 /*!
  * \brief Transform values of multiple 2D DLR expansions on the 2D DLR imaginary
@@ -237,8 +230,7 @@ vals2coefs_if(nda::matrix<dcomplex, F_layout> cf2if,
  * this function.
  */
 std::tuple<nda::array<dcomplex, 4>, nda::array<dcomplex, 2>>
-vals2coefs_if_many(nda::matrix<dcomplex, F_layout> cf2if,
-                   nda::array_const_view<dcomplex, 2, F_layout> vals, int r);
+vals2coefs_if_many(fmatrix cf2if, nda::array_const_view<dcomplex, 2, nda::F_layout> vals, int r);
 
 /*!
  * \brief Transform values of a 2D DLR expansion on the 2D DLR imaginary
@@ -256,9 +248,8 @@ vals2coefs_if_many(nda::matrix<dcomplex, F_layout> cf2if,
  *
  * \note The matrix \p cf2if should be obtained using \ref build_cf2if_3term.
  */
-std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>>
-vals2coefs_if_3term(nda::matrix<dcomplex, F_layout> cf2if,
-                    nda::vector_const_view<dcomplex> vals, int r);
+std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>> vals2coefs_if_3term(fmatrix cf2if,
+                                                                                 nda::vector_const_view<dcomplex> vals, int r);
 
 /*!
  * \brief Transform values of multiple 2D DLR expansions on the 2D DLR imaginary
@@ -277,9 +268,7 @@ vals2coefs_if_3term(nda::matrix<dcomplex, F_layout> cf2if,
  * \note The matrix \p cf2if should be obtained using \ref build_cf2if_3term.
  */
 std::tuple<nda::array<dcomplex, 4>, nda::array<dcomplex, 2>>
-vals2coefs_if_many_3term(nda::matrix<dcomplex, F_layout> cf2if,
-                         nda::array_const_view<dcomplex, 2, F_layout> vals,
-                         int r);
+vals2coefs_if_many_3term(fmatrix cf2if, nda::array_const_view<dcomplex, 2, nda::F_layout> vals, int r);
 
 /*!
  * \brief Transform values of a 2D DLR expansion on the 2D DLR imaginary
@@ -296,9 +285,7 @@ vals2coefs_if_many_3term(nda::matrix<dcomplex, F_layout> cf2if,
  *
  * \note The matrix \p cf2if should be obtained using \ref build_cf2if_square.
  */
-nda::array<dcomplex, 1>
-vals2coefs_if_square(nda::matrix<dcomplex, F_layout> cf2if,
-                     nda::vector_const_view<dcomplex> vals);
+nda::array<dcomplex, 1> vals2coefs_if_square(fmatrix cf2if, nda::vector_const_view<dcomplex> vals);
 
 /*!
  * \brief Evaluate a 2D DLR expansion at a given fermionic/fermionic Matsubara

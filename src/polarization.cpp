@@ -1,11 +1,4 @@
 #include "polarization.hpp"
-#include "dlr2d.hpp"
-#include <cppdlr/cppdlr.hpp>
-#include <numbers>
-
-using namespace cppdlr;
-using namespace nda;
-using namespace std::numbers;
 
 namespace dlr2d {
 
@@ -24,12 +17,12 @@ nda::vector<dcomplex> polarization(
 
   // Get finer DLR tau discretization
   double lambda2 = 2 * lambda;
-  auto dlr_rf2 = build_dlr_rf(lambda2, eps);
+  auto dlr_rf2   = cppdlr::build_dlr_rf(lambda2, eps);
   int r2 = dlr_rf2.size();
-  auto itops2 = imtime_ops(lambda2, dlr_rf2);
+  auto itops2    = cppdlr::imtime_ops(lambda2, dlr_rf2);
 
   // Get coefs -> fine tau vals matrix
-  auto cf2itfine = build_k_it(itops2.get_itnodes(), dlr_rf);
+  auto cf2itfine = cppdlr::build_k_it(itops2.get_itnodes(), dlr_rf);
 
   // Get fine coefs -> bosonic imag freq vals matrix
   auto cffine2if = nda::matrix<dcomplex>(r, r2);

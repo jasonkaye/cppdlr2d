@@ -1,4 +1,5 @@
 #include "siam.hpp"
+
 #include <fstream>
 
 using namespace dlr2d;

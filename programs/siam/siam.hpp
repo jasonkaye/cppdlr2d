@@ -5,7 +5,6 @@
 
 #include "../../src/dlr2d.hpp"
 #include "../../src/polarization.hpp"
-#include <cppdlr/cppdlr.hpp>
 
 using namespace dlr2d;
 
@@ -65,5 +64,4 @@ nda::vector<double> siam_allfuncs(double beta, double u, double lambda,
  * \return Vector containing problem parameters and errors, for analysis and
  * plotting
  */
-nda::vector<double> siam_allfuncs_3term(double beta, double u, double lambda,
-                                        double eps, int niomtst, int nbos_tst);
+nda::vector<double> siam_allfuncs_3term(double beta, double u, double lambda, double eps, int niomtst, int nbos_tst);

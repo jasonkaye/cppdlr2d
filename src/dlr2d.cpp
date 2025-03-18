@@ -1,12 +1,13 @@
 #include "dlr2d.hpp"
 #include "utils.hpp"
+
 #include <fmt/format.h>
 #include <numbers>
 
-using namespace cppdlr;
-using namespace std::numbers;
-
 namespace dlr2d {
+
+using namespace cppdlr;
+using std::numbers::pi;
 
 // Obtain 2D DLR nodes
 
@@ -29,7 +30,7 @@ void build_dlr2d_if_fullgrid(double lambda, int niom_dense, double eps,
 
   // Get system matrix for dense grid
   auto kmat =
-      nda::matrix<dcomplex, F_layout>(niom_dense * niom_dense, 3 * r * r + r);
+      fmatrix(niom_dense * niom_dense, 3 * r * r + r);
   std::complex<double> nu1 = 0, nu2 = 0;
 
   // Regular part
@@ -73,7 +74,7 @@ void build_dlr2d_if_fullgrid(double lambda, int niom_dense, double eps,
   // start).count());
 
   // Pivoted QR to determine sampling nodes
-  auto kmatt = nda::matrix<dcomplex, F_layout>(transpose(kmat));
+  auto kmatt = fmatrix(transpose(kmat));
   auto start = std::chrono::high_resolution_clock::now();
   auto piv = nda::zeros<int>(niom_dense * niom_dense);
   auto tau = nda::vector<dcomplex>(3 * r * r + r);
@@ -163,7 +164,7 @@ void build_dlr2d_if(double lambda, double eps, std::string path,
   auto nu2d = (2 * nu2didx + 1) * pi * 1i;
 
   // Get system matrix for dense grid
-  auto kmat = nda::matrix<dcomplex, F_layout>(3 * r * r, 3 * r * r + r);
+  auto kmat = fmatrix(3 * r * r, 3 * r * r + r);
 
   // Regular part
   for (int k = 0; k < r; ++k) {
@@ -213,7 +214,7 @@ void build_dlr2d_if(double lambda, double eps, std::string path,
   }
 
   // Pivoted QR to determine sampling nodes
-  auto kmatt = nda::matrix<dcomplex, F_layout>(transpose(kmat));
+  auto kmatt = fmatrix(transpose(kmat));
   auto start = std::chrono::high_resolution_clock::now();
   auto piv = nda::zeros<int>(3 * r * r);
   auto tau = nda::vector<dcomplex>(3 * r * r);
@@ -297,7 +298,7 @@ void build_dlr2d_if_3term(double lambda, double eps, std::string path,
   auto nu2d = (2 * nu2didx + 1) * pi * 1i;
 
   // Get system matrix for dense grid
-  auto kmat = nda::matrix<dcomplex, F_layout>(2 * r * r, 2 * r * r + r);
+  auto kmat = fmatrix(2 * r * r, 2 * r * r + r);
 
   // Regular part
   for (int k = 0; k < r; ++k) {
@@ -348,7 +349,7 @@ void build_dlr2d_if_3term(double lambda, double eps, std::string path,
              kmat.shape(1));
 
   // Pivoted QR to determine sampling nodes
-  auto kmatt = nda::matrix<dcomplex, F_layout>(transpose(kmat));
+  auto kmatt = fmatrix(transpose(kmat));
   auto start = std::chrono::high_resolution_clock::now();
   auto piv = nda::zeros<int>(2 * r * r);
   auto tau = nda::vector<dcomplex>(2 * r * r);
@@ -434,7 +435,7 @@ void build_dlr2d_ifrf(double lambda, double eps, std::string path,
   auto nu2d = (2 * nu2didx + 1) * pi * 1i;
 
   // Get system matrix for dense grid
-  auto kmat = nda::matrix<dcomplex, F_layout>(3 * r * r, 3 * r * r + r);
+  auto kmat = fmatrix(3 * r * r, 3 * r * r + r);
 
   // Regular part
   for (int k = 0; k < r; ++k) {
@@ -484,7 +485,7 @@ void build_dlr2d_ifrf(double lambda, double eps, std::string path,
   }
 
   // Pivoted QR to determine basis
-  auto kmat_copy = nda::matrix<dcomplex, F_layout>(kmat);
+  auto kmat_copy = fmatrix(kmat);
   auto piv = nda::zeros<int>(3 * r * r + r);
   auto tau = nda::vector<dcomplex>(3 * r * r + r);
   nda::lapack::geqp3(kmat, piv, tau);
@@ -536,7 +537,7 @@ void build_dlr2d_ifrf(double lambda, double eps, std::string path,
     }
   }
 
-  auto kmat2 = nda::matrix<dcomplex, F_layout>(r2d, 3 * r * r);
+  auto kmat2 = fmatrix(r2d, 3 * r * r);
   for (int k = 0; k < r2d; ++k) {
     kmat2(k, _) = kmat_copy(_, piv(k));
   }
@@ -561,15 +562,13 @@ void build_dlr2d_ifrf(double lambda, double eps, std::string path,
   fmt::print("System matrix rank = {}\n\n", r2d);
 }
 
-nda::matrix<dcomplex, F_layout> build_cf2if(double beta,
-                                            nda::vector<double> dlr_rf,
-                                            nda::array<int, 2> dlr2d_if) {
+fmatrix build_cf2if(double beta, nda::vector<double> dlr_rf, nda::array<int, 2> dlr2d_if) {
 
   int r = dlr_rf.size();
   int niom_skel = dlr2d_if.shape(0);
 
   // Get system matrix for dense grid
-  auto cf2if = nda::matrix<dcomplex, F_layout>(niom_skel, 3 * r * r + r);
+  auto cf2if = fmatrix(niom_skel, 3 * r * r + r);
   // std::complex<double> nu1 = 0, nu2 = 0;
 
   // Regular part
@@ -623,15 +622,13 @@ nda::matrix<dcomplex, F_layout> build_cf2if(double beta,
 }
 
 // two terms K matrix
-nda::matrix<dcomplex, F_layout> build_cf2if_3term(double beta,
-                                                  nda::vector<double> dlr_rf,
-                                                  nda::array<int, 2> dlr2d_if) {
+fmatrix build_cf2if_3term(double beta, nda::vector<double> dlr_rf, nda::array<int, 2> dlr2d_if) {
 
   int r = dlr_rf.size();
   int niom_skel = dlr2d_if.shape(0);
 
   // Get system matrix for dense grid
-  auto kmat = nda::matrix<dcomplex, F_layout>(niom_skel, 2 * r * r + r);
+  auto kmat = fmatrix(niom_skel, 2 * r * r + r);
   // std::complex<double> nu1 = 0, nu2 = 0;
 
   // Regular part
@@ -666,16 +663,13 @@ nda::matrix<dcomplex, F_layout> build_cf2if_3term(double beta,
   return kmat;
 }
 
-nda::matrix<dcomplex, F_layout>
-build_cf2if_square(double beta, nda::vector<double> dlr_rf,
-                   nda::array<int, 2> dlr2d_rfidx,
-                   nda::array<int, 2> dlr2d_if) {
+fmatrix build_cf2if_square(double beta, nda::vector<double> dlr_rf, nda::array<int, 2> dlr2d_rfidx, nda::array<int, 2> dlr2d_if) {
 
   int r = dlr_rf.size();
   int r2d = dlr2d_if.shape(0);
 
   // Get system matrix for dense grid
-  auto kmat = nda::matrix<dcomplex, F_layout>(r2d, r2d);
+  auto kmat = fmatrix(r2d, r2d);
 
   // Regular part
   int k = 0, l = 0;
@@ -707,9 +701,7 @@ build_cf2if_square(double beta, nda::vector<double> dlr_rf,
   return kmat;
 }
 
-nda::array<dcomplex, 1>
-vals2coefs_if_square(nda::matrix<dcomplex, F_layout> cf2if,
-                     nda::vector_const_view<dcomplex> vals) {
+nda::array<dcomplex, 1> vals2coefs_if_square(fmatrix cf2if, nda::vector_const_view<dcomplex> vals) {
 
   int r2d = vals.size();
   auto coef = nda::array<dcomplex, 1>(r2d);
@@ -722,9 +714,8 @@ vals2coefs_if_square(nda::matrix<dcomplex, F_layout> cf2if,
   return coef;
 }
 
-std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>>
-vals2coefs_if(nda::matrix<dcomplex, F_layout> cf2if,
-              nda::vector_const_view<dcomplex> vals, int r) {
+std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>> vals2coefs_if(fmatrix cf2if, nda::vector_const_view<dcomplex> vals,
+                                                                           int r) {
 
   int m = vals.size();
   int n = 3 * r * r + r;
@@ -735,11 +726,11 @@ vals2coefs_if(nda::matrix<dcomplex, F_layout> cf2if,
   int rank = 0;                    // Rank (not needed)
   nda::lapack::gelss(cf2if, tmp, s, 0.0, rank);
 
-  // auto u = nda::matrix<dcomplex, F_layout>(m, m);
-  // auto vt = nda::matrix<dcomplex, F_layout>(n, n);
+  // auto u = fmatrix(m, m);
+  // auto vt = fmatrix(n, n);
   // auto s = nda::vector<double>(m, n);
   // nda::lapack::gesvd(kmat, s, u, vt);
-  // auto smat = nda::matrix<double, F_layout>(m, n);
+  // auto smat = nda::matrix<double, nda::F_layout>(m, n);
   // smat = 0;
   // for (int k = 0; k < m; ++k) {
   //   smat(k, k) = 1.0/s(k);
@@ -756,13 +747,12 @@ vals2coefs_if(nda::matrix<dcomplex, F_layout> cf2if,
 }
 
 std::tuple<nda::array<dcomplex, 4>, nda::array<dcomplex, 2>>
-vals2coefs_if_many(nda::matrix<dcomplex, F_layout> cf2if,
-                   nda::array_const_view<dcomplex, 2, F_layout> vals, int r) {
+vals2coefs_if_many(fmatrix cf2if, nda::array_const_view<dcomplex, 2, nda::F_layout> vals, int r) {
 
   int m = vals.shape(0);
   int nrhs = vals.shape(1);
   int n = 3 * r * r + r;
-  auto tmp = nda::array<dcomplex, 2, F_layout>(n, nrhs);
+  auto tmp              = fmatrix(n, nrhs);
   tmp(nda::range(m), _) = vals;
 
   auto s = nda::vector<double>(m); // Singular values (not needed)
@@ -780,9 +770,8 @@ vals2coefs_if_many(nda::matrix<dcomplex, F_layout> cf2if,
   return {coefreg, coefsng};
 }
 
-std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>>
-vals2coefs_if_3term(nda::matrix<dcomplex, F_layout> cf2if,
-                    nda::vector_const_view<dcomplex> vals, int r) {
+std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>> vals2coefs_if_3term(fmatrix cf2if,
+                                                                                 nda::vector_const_view<dcomplex> vals, int r) {
 
   int m = vals.size();
   int n = 2 * r * r + r;
@@ -802,14 +791,12 @@ vals2coefs_if_3term(nda::matrix<dcomplex, F_layout> cf2if,
 }
 
 std::tuple<nda::array<dcomplex, 4>, nda::array<dcomplex, 2>>
-vals2coefs_if_many_3term(nda::matrix<dcomplex, F_layout> cf2if,
-                         nda::array_const_view<dcomplex, 2, F_layout> vals,
-                         int r) {
+vals2coefs_if_many_3term(fmatrix cf2if, nda::array_const_view<dcomplex, 2, nda::F_layout> vals, int r) {
 
   int m = vals.shape(0);
   int nrhs = vals.shape(1);
   int n = 2 * r * r + r;
-  auto tmp = nda::array<dcomplex, 2, F_layout>(n, nrhs);
+  auto tmp              = fmatrix(n, nrhs);
   tmp(nda::range(m), _) = vals;
 
   auto s = nda::vector<double>(m); // Singular values (not needed)

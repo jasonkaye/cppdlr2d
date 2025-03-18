@@ -1,6 +1,6 @@
 #pragma once
-#include "nda/nda.hpp"
-#include <cppdlr/cppdlr.hpp>
+
+#include "dlr2d.hpp"
 
 namespace dlr2d {
 

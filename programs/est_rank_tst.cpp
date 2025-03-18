@@ -25,13 +25,13 @@ int main() {
   }
 
   // Random orthogonal matrices
-  auto randmat = nda::array<dcomplex, 2, F_layout>::rand(std::array{n, n});
-  auto u = nda::matrix<dcomplex, F_layout>(n, n);
-  auto vt = nda::matrix<dcomplex, F_layout>(n, n);
+  auto randmat = fmatrix::rand(std::array{n, n});
+  auto u       = fmatrix(n, n);
+  auto vt      = fmatrix(n, n);
   auto s = nda::vector<double>(n);
   nda::lapack::gesvd(randmat, s, u, vt);
 
-  auto a = nda::matrix<dcomplex, F_layout>(n, n);
+  auto a = fmatrix(n, n);
   a = u * svals * vt;
 
   // Pivoted QR decomposition
@@ -57,8 +57,8 @@ int main() {
 
   // Compute the true spectral norm of R22 for each rank
 
-  auto r22_1 = nda::matrix<dcomplex, F_layout>(n - rank1, n - rank1);
-  auto r22_2 = nda::matrix<dcomplex, F_layout>(n - rank2, n - rank2);
+  auto r22_1 = fmatrix(n - rank1, n - rank1);
+  auto r22_2 = fmatrix(n - rank2, n - rank2);
   r22_1 = 0;
   r22_2 = 0;
   for (int i = rank1 + 1; i < n; i++) {
@@ -72,15 +72,15 @@ int main() {
     }
   }
 
-  auto u1 = nda::matrix<dcomplex, F_layout>(n - rank1, n - rank1);
-  auto vt1 = nda::matrix<dcomplex, F_layout>(n - rank1, n - rank1);
+  auto u1  = fmatrix(n - rank1, n - rank1);
+  auto vt1 = fmatrix(n - rank1, n - rank1);
   auto s1 = nda::vector<double>(n - rank1);
   nda::lapack::gesvd(r22_1, s1, u1, vt1);
 
   PRINT(s1(0));
 
-  auto u2 = nda::matrix<dcomplex, F_layout>(n - rank2, n - rank2);
-  auto vt2 = nda::matrix<dcomplex, F_layout>(n - rank2, n - rank2);
+  auto u2  = fmatrix(n - rank2, n - rank2);
+  auto vt2 = fmatrix(n - rank2, n - rank2);
   auto s2 = nda::vector<double>(n - rank2);
   nda::lapack::gesvd(r22_2, s2, u2, vt2);
 

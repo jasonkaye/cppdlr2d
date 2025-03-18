@@ -5,7 +5,6 @@
 
 #include "../../src/dlr2d.hpp"
 #include "../../src/polarization.hpp"
-#include <cppdlr/cppdlr.hpp>
 
 using namespace dlr2d;
 

@@ -1,14 +1,7 @@
-#include "../../src/dlr2d.hpp"
-#include "../../src/polarization.hpp"
-#include "../../src/utils.hpp"
 #include "hubatom.hpp"
+
 #include <fmt/format.h>
 #include <gtest/gtest.h>
-#include <numbers>
-
-using namespace cppdlr;
-using namespace std::numbers;
-using namespace dlr2d;
 
 /*!
  * \brief Test DLR expansion of density correlation function, singlet vertex
