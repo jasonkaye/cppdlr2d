@@ -18,17 +18,16 @@ TEST(hubatom, main) {
   int niomtst = 512;  // # imag freq test points (must be even)
   int nbos_tst = 64;  // # pts in test grid for polarization
 
-  auto path = "../../../dlr2d_if_data/"; // Path for DLR 2D grid data
-  auto filename = get_filename(lambda, eps);
-  auto dlr2d_if = read_dlr2d_if(path, filename);
+  fmt::print("\nBuilding 2D DLR grid...\n");
+  auto start = std::chrono::high_resolution_clock::now();
+  auto dlr2d_if = build_dlr2d_if(lambda, eps);
+  auto end = std::chrono::high_resolution_clock::now();
+  fmt::print("\nTime: {}\n\n",
+             std::chrono::duration<double>(end - start).count());
 
   // Get DLR frequencies
   auto dlr_rf = build_dlr_rf(lambda, eps);
   int r = dlr_rf.size(); // # DLR basis functions
-
-  fmt::print("\nDLR cutoff Lambda = {}\n", lambda);
-  fmt::print("DLR tolerance epsilon = {}\n", eps);
-  fmt::print("# DLR basis functions = {}\n", r);
 
   // Get DLR nodes for particle-hole channel
   auto dlr2d_if_ph = nda::array<int, 2>(dlr2d_if.shape());
@@ -36,13 +35,8 @@ TEST(hubatom, main) {
   dlr2d_if_ph(_, 1) = dlr2d_if(_, 1);
 
   auto kmat = build_cf2if(beta, dlr_rf, dlr2d_if);
-  fmt::print("Fine system matrix shape = {} x {}\n", 3 * r * r + r,
-             3 * r * r + r);
 
   int niom = dlr2d_if.shape(0);
-
-  fmt::print("DLR rank squared = {}\n", r * r);
-  fmt::print("System matrix size = {} x {}\n\n", kmat.shape(0), kmat.shape(1));
 
   // Get fermionic and bosonic DLR grids
   auto ifops_fer = imfreq_ops(lambda, dlr_rf, Fermion);
@@ -79,14 +73,14 @@ TEST(hubatom, main) {
   }
 
   fmt::print("Obtaining DLR coefficients...\n");
+  fmt::print("System matrix size = {} x {}\n\n", kmat.shape(0), kmat.shape(1));
 
-  auto start = std::chrono::high_resolution_clock::now();
-
+  start = std::chrono::high_resolution_clock::now();
   auto [chi_d_c, chi_d_csing] = vals2coefs_if(kmat, chi_d, r);
   auto [lam_s_c, lam_s_csing] = vals2coefs_if(kmat, lam_s, r);
-
-  auto end = std::chrono::high_resolution_clock::now();
-  fmt::print("Time: {}\n", std::chrono::duration<double>(end - start).count());
+  end = std::chrono::high_resolution_clock::now();
+  fmt::print("Time: {}\n\n",
+             std::chrono::duration<double>(end - start).count());
 
   // Test DLR expansion of vertex function
   fmt::print("Testing DLR expansion of vertex function...\n");
@@ -150,8 +144,8 @@ TEST(hubatom, main) {
   // Compute polarization from DLR expansions
   auto itops = imtime_ops(lambda, dlr_rf);
 
-  auto pol_s = polarization(beta, lambda, eps, itops, ifops_fer, ifops_bos,
-                                gc, gc, lam_s_c, lam_s_csing);
+  auto pol_s = polarization(beta, lambda, eps, itops, ifops_fer, ifops_bos, gc,
+                            gc, lam_s_c, lam_s_csing);
   pol_s *= -1.0 / 2;
 
   auto pol_s_c = ifops_bos.vals2coefs(beta, pol_s); // DLR expansion
