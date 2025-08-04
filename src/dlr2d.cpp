@@ -1,8 +1,8 @@
 #include "dlr2d.hpp"
 #include "utils.hpp"
-
 #include <fmt/format.h>
 #include <numbers>
+#include <chrono>
 
 namespace dlr2d {
 
