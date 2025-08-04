@@ -1,7 +1,7 @@
 #include "hubatom.hpp"
-
 #include <fmt/format.h>
 #include <gtest/gtest.h>
+#include <chrono>
 
 /*!
  * \brief Test DLR expansion of density correlation function, singlet vertex

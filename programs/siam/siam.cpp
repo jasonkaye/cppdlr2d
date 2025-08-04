@@ -1,7 +1,7 @@
 #include "siam.hpp"
 #include "../src/utils.hpp"
-
 #include <fmt/format.h>
+#include <chrono>
 
 nda::vector<double> siam_allfuncs(double beta, double u, double lambda,
                                   double eps, int niomtst, int nbos_tst,

@@ -1,6 +1,7 @@
 #include "hubatom.hpp"
 #include "../src/utils.hpp"
 #include <fmt/format.h>
+#include <chrono>
 
 using namespace dlr2d;
 
