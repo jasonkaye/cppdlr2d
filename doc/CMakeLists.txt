@@ -25,7 +25,7 @@ macro(generate_docs header_file)
 endmacro(generate_docs)
 
 generate_docs(${PROJECT_SOURCE_DIR}/c++/${PROJECT_NAME}/${PROJECT_NAME}.hpp)
-
+ 
 # --------------------------------------------------------
 # Build & Run the C++ doc examples and capture the output
 # --------------------------------------------------------
@@ -37,7 +37,6 @@ foreach(example ${ExampleList})
   get_filename_component(d ${example} DIRECTORY)
   add_executable(${PROJECT_NAME}_doc_${f} EXCLUDE_FROM_ALL ${example})
   set_property(TARGET ${PROJECT_NAME}_doc_${f} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${d})
-  target_link_libraries(${PROJECT_NAME}_doc_${f} triqs)
   add_custom_command(TARGET ${PROJECT_NAME}_doc_${f} POST_BUILD
    COMMAND ${PROJECT_NAME}_doc_${f} > ${CMAKE_CURRENT_SOURCE_DIR}/${d}/${f}.output 2>/dev/null
    WORKING_DIRECTORY ${d}
@@ -56,7 +55,7 @@ endif()
 add_custom_target(${PROJECT_NAME}_docs_sphinx ALL)
 add_custom_command(
   TARGET ${PROJECT_NAME}_docs_sphinx POST_BUILD
-  COMMAND PYTHONPATH=${PROJECT_BINARY_DIR}/python:$ENV{PYTHONPATH} ${SPHINXBUILD_EXECUTABLE} -j auto -c . -b html ${CMAKE_CURRENT_SOURCE_DIR} html
+  COMMAND PYTHONPATH=${PROJECT_BINARY_DIR}/python:${h5_BINARY_DIR}/python:$ENV{PYTHONPATH} ${SPHINXBUILD_EXECUTABLE} -c . -j auto -b html ${CMAKE_CURRENT_SOURCE_DIR} html
 )
 
 option(Sphinx_Only "When building the documentation, skip the Python Modules and the generation of C++ Api and example outputs" OFF)
