@@ -18,17 +18,25 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/google/googletest
   GIT_TAG        main
 )
+FetchContent_MakeAvailable(googletest)
+set_property(GLOBAL PROPERTY GTest_FOUND TRUE)
+
+# -- Add nda (DEV_EXPR_INDEXED) --
+FetchContent_Declare(
+  nda
+  GIT_REPOSITORY https://github.com/triqs/nda
+  GIT_TAG        DEV_EXPR_INDEXED
+)
+FetchContent_MakeAvailable(nda)
+set_property(GLOBAL PROPERTY nda_FOUND TRUE)
 
 # -- Add cppdlr --
-# Tell cppdlr that google test has already been added
-set_property(GLOBAL PROPERTY GTest_FOUND TRUE)
 FetchContent_Declare(
   cppdlr
   GIT_REPOSITORY https://github.com/flatironinstitute/cppdlr
   GIT_TAG        main
 )
-
-FetchContent_MakeAvailable(googletest cppdlr)
+FetchContent_MakeAvailable(cppdlr)
 
 enable_testing()
 
