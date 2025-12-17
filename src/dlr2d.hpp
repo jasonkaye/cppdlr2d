@@ -5,29 +5,71 @@
 namespace dlr2d {
 
 /*!
- * \brief Obtain 2D DLR Matsubara frequency grid
+ * \brief Obtain 2D DLR "product" Matsubara frequency grid
  *
- * This function generates an HDF5 file in the specified path containing the
- * 2D DLR Matsubara frequency grid points in terms of Matsubara frequency index
- * pairs.
+ * This function builds a grid composed of a union of products of 1D DLR grids,
+ * as described by Eq. 21 of Kiese et al., "Discrete Lehmann representation of
+ * three-point functions", PRB (2025). This is the "fine" grid from which we
+ * typically select the 2D DLR grid points. We note that here, the grid points
+ * corresponding to the fourth row of Eq. 21 (the contribution corresponding to
+ * singular terms) are omitted, as these points are redundant with the other
+ * terms as long as the zero bosonic frequency is included in the 1D DLR grid.
  *
- * It uses the method proposed in Kiese et al., "Discrete Lehmann representation
- * of three-point functions", arXiv:2405.06716, which involves building the fine
- * Matsubara frequency grid from combinations of 1D DLR grid points.
+ * \param[in] lambda   DLR cutoff parameter
+ * \param[in] dlr_rf   1D DLR real frequency grid
  *
- * \param[in] lambda      DLR cutoff parameter
- * \param[in] eps         Error tolerance
- * \param[in] path        Path to directory in which to save 2D DLR Mat. freqs.
- * \param[in] filename    Name of file in which to save 2D DLR Mat. freqs.
+ * \return Grid points returned as an array of Matsubara frequency index pairs.
  *
  * \note For a fermionic Matsubara frequency i*nu_n = (2n+1)*pi/beta, we refer
  * to n as its index. An index pair (m, n) corresponds to the 2D Matsubara
  * frequency point (i nu_m, i nu_n).
  */
-void build_dlr2d_if(double lambda, double eps, std::string path,
-                    std::string filename);
+nda::array<int, 2> build_prod_if(double lambda,
+                                 nda::vector_const_view<double> dlr_rf);
 
+/*!
+ * \copydoc build_prod_if(double, nda::vector_const_view<double>)
+ *
+ * Rather than returning the grid, this overload writes the grid index pairs to
+ *  an HDF5 file.
+ *
+ * \param[in] path        Path to directory in which to save index pairs
+ * \param[in] filename    Name of file in which to save index pairs
+ */
+void build_prod_if(double lambda, nda::vector_const_view<double> dlr_rf,
+                   const std::string &path, const std::string &filename);
+
+/*!
+ * \brief Obtain 2D DLR Matsubara frequency grid
+ *
+ * This function generates the 2D DLR Matsubara frequency grid points in terms
+ * of Matsubara frequency index pairs. It uses the method proposed in Kiese et
+ * al., "Discrete Lehmann representation of three-point functions",
+ * arXiv:2405.06716, which involves subselecting from a fine Matsubara frequency
+ * grid from combinations of 1D DLR grid points.
+ *
+ * \param[in] lambda      DLR cutoff parameter
+ * \param[in] eps         Error tolerance
+ *
+ * \return Grid points returned as an array of Matsubara frequency index pairs.
+ *
+ * \note For a fermionic Matsubara frequency i*nu_n = (2n+1)*pi/beta, we refer
+ * to n as its index. An index pair (m, n) corresponds to the 2D Matsubara
+ * frequency point (i nu_m, i nu_n).
+ */
 nda::array<int, 2> build_dlr2d_if(double lambda, double eps);
+
+/*!
+ * \copydoc build_dlr2d_if(double, double)
+ *
+ * Rather than returning the grid, this overload writes the 2D DLR Matsubara
+ * frequency index pairs to an HDF5 file.
+ *
+ * \param[in] path        Path to directory in which to save index pairs
+ * \param[in] filename    Name of file in which to save index pairs
+ */
+void build_dlr2d_if(double lambda, double eps, const std::string &path,
+                    const std::string &filename);
 
 /*!
  * \brief Obtain 2D DLR Matsubara frequency grid using three-term DLR
@@ -88,7 +130,8 @@ nda::array<int, 2> build_dlr2d_if_3term(double lambda, double eps);
 void build_dlr2d_ifrf(double lambda, double eps, std::string path,
                       std::string filename);
 
-std::pair<nda::array<int, 2>, nda::array<int, 2>> build_dlr2d_ifrf(double lambda, double eps);
+std::pair<nda::array<int, 2>, nda::array<int, 2>>
+build_dlr2d_ifrf(double lambda, double eps);
 
 /*!
  * \brief Obtain 2D DLR Matsubara frequency grid, using all Matsubara
@@ -119,7 +162,8 @@ std::pair<nda::array<int, 2>, nda::array<int, 2>> build_dlr2d_ifrf(double lambda
 void build_dlr2d_if_fullgrid(double lambda, int niom_dense, double eps,
                              std::string path, std::string filename);
 
-nda::array<int, 2> build_dlr2d_if_fullgrid(double lambda, int niom_dense, double eps);
+nda::array<int, 2> build_dlr2d_if_fullgrid(double lambda, int niom_dense,
+                                           double eps);
 
 /*!
  * \brief Read 2D DLR Matsubara frequency grid from file
@@ -162,16 +206,16 @@ read_dlr2d_rfif(std::string path, std::string filename);
 
 /*!
  * \brief Build matrix which maps coefficients of a 2D DLR expansion to its
- * values on the 2D DLR imaginary (Matsubara) frequency grid
+ * values on a 2D imaginary (Matsubara) frequency grid
  *
  * \param[in] beta      Inverse temperature
  * \param[in] dlr_rf    1D DLR real frequencies
- * \param[in] dlr2d_if  2D DLR imaginary frequency grid
+ * \param[in] if_idx    2D imaginary frequency grid indices
  *
  * \return Coefficients to values matrix
  */
-fmatrix build_cf2if(double beta, nda::vector<double> dlr_rf, nda::array<int, 2> dlr2d_if);
-
+fmatrix build_cf2if(double beta, nda::vector<double> dlr_rf,
+                    nda::array<int, 2> if_idx);
 /*!
  * \brief Build matrix which maps coefficients of a 2D DLR expansion to its
  * values on the 2D DLR imaginary (Matsubara) frequency grid, using three-term
@@ -187,7 +231,8 @@ fmatrix build_cf2if(double beta, nda::vector<double> dlr_rf, nda::array<int, 2> 
  *
  * \return Coefficients to values matrix
  */
-fmatrix build_cf2if_3term(double beta, nda::vector<double> dlr_rf, nda::array<int, 2> dlr2d_if);
+fmatrix build_cf2if_3term(double beta, nda::vector<double> dlr_rf,
+                          nda::array<int, 2> dlr2d_if);
 
 /*!
  * \brief Build matrix which maps coefficients of a 2D DLR expansion to its
@@ -205,7 +250,9 @@ fmatrix build_cf2if_3term(double beta, nda::vector<double> dlr_rf, nda::array<in
  *
  * \return Coefficients to values matrix
  */
-fmatrix build_cf2if_square(double beta, nda::vector<double> dlr_rf, nda::array<int, 2> dlr2d_rfidx, nda::array<int, 2> dlr2d_if);
+fmatrix build_cf2if_square(double beta, nda::vector<double> dlr_rf,
+                           nda::array<int, 2> dlr2d_rfidx,
+                           nda::array<int, 2> dlr2d_if);
 
 /*!
  * \brief Transform values of a 2D DLR expansion on the 2D DLR imaginary
@@ -219,8 +266,8 @@ fmatrix build_cf2if_square(double beta, nda::vector<double> dlr_rf, nda::array<i
  *
  * \note The matrix \p cf2if should be obtained using \ref build_cf2if.
  */
-std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>> vals2coefs_if(fmatrix cf2if, nda::vector_const_view<dcomplex> vals,
-                                                                           int r);
+std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>>
+vals2coefs_if(fmatrix cf2if, nda::vector_const_view<dcomplex> vals, int r);
 
 /*!
  * \brief Transform values of multiple 2D DLR expansions on the 2D DLR imaginary
@@ -238,7 +285,9 @@ std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>> vals2coefs_if(fmatr
  * this function.
  */
 std::tuple<nda::array<dcomplex, 4>, nda::array<dcomplex, 2>>
-vals2coefs_if_many(fmatrix cf2if, nda::array_const_view<dcomplex, 2, nda::F_layout> vals, int r);
+vals2coefs_if_many(fmatrix cf2if,
+                   nda::array_const_view<dcomplex, 2, nda::F_layout> vals,
+                   int r);
 
 /*!
  * \brief Transform values of a 2D DLR expansion on the 2D DLR imaginary
@@ -256,8 +305,9 @@ vals2coefs_if_many(fmatrix cf2if, nda::array_const_view<dcomplex, 2, nda::F_layo
  *
  * \note The matrix \p cf2if should be obtained using \ref build_cf2if_3term.
  */
-std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>> vals2coefs_if_3term(fmatrix cf2if,
-                                                                                 nda::vector_const_view<dcomplex> vals, int r);
+std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>>
+vals2coefs_if_3term(fmatrix cf2if, nda::vector_const_view<dcomplex> vals,
+                    int r);
 
 /*!
  * \brief Transform values of multiple 2D DLR expansions on the 2D DLR imaginary
@@ -276,7 +326,9 @@ std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>> vals2coefs_if_3term
  * \note The matrix \p cf2if should be obtained using \ref build_cf2if_3term.
  */
 std::tuple<nda::array<dcomplex, 4>, nda::array<dcomplex, 2>>
-vals2coefs_if_many_3term(fmatrix cf2if, nda::array_const_view<dcomplex, 2, nda::F_layout> vals, int r);
+vals2coefs_if_many_3term(fmatrix cf2if,
+                         nda::array_const_view<dcomplex, 2, nda::F_layout> vals,
+                         int r);
 
 /*!
  * \brief Transform values of a 2D DLR expansion on the 2D DLR imaginary
@@ -293,7 +345,8 @@ vals2coefs_if_many_3term(fmatrix cf2if, nda::array_const_view<dcomplex, 2, nda::
  *
  * \note The matrix \p cf2if should be obtained using \ref build_cf2if_square.
  */
-nda::array<dcomplex, 1> vals2coefs_if_square(fmatrix cf2if, nda::vector_const_view<dcomplex> vals);
+nda::array<dcomplex, 1>
+vals2coefs_if_square(fmatrix cf2if, nda::vector_const_view<dcomplex> vals);
 
 /*!
  * \brief Evaluate a 2D DLR expansion at a given fermionic/fermionic Matsubara
