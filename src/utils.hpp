@@ -3,17 +3,18 @@
 #include "nda/nda.hpp"
 
 #include <numbers>
+#include <optional>
 #include <string>
 
 namespace dlr2d {
 
-  using namespace cppdlr;
-  using std::numbers::pi;
+using namespace cppdlr;
+using std::numbers::pi;
 
-  using fmatrix            = nda::matrix<dcomplex, nda::F_layout>;
-  using fmatrix_const_view = nda::matrix_const_view<dcomplex, nda::F_layout>;
+using fmatrix = nda::matrix<dcomplex, nda::F_layout>;
+using fmatrix_const_view = nda::matrix_const_view<dcomplex, nda::F_layout>;
 
-  /*!
+/*!
  * \brief Get standard filename used by \ref build_dlr2d_if_fullgrid to store 2D
  * Matsubara frequency DLR grid
  *
@@ -56,11 +57,16 @@ std::string get_filename_3term(double lambda, double eps);
  * Assumes QR decomposition was computed using LAPACK geqp3. The
  * upper-triangular matrix R, which is used to estimate the rank, is stored in
  * the upper-triangular part of A.
-
- * We use Eqn. (4.3) from Halko, Martinsson, Tropp, SIAM Rev. 2011 to obtain an
- * efficient randomized algorithm to estimate the rank in a manner which
- * guarantees (with very high probability) that the spectral norm error of the
- * resulting estimate of A is less than eps. The failure probability is
+ *
+ * Method 1 estimates based on the values of the diagonal elements of R.
+ *
+ * Method 2 estimates based on the sum of the squares of the lower right entries
+ * of R.
+ *
+ * Method 3 uses Eqn. (4.3) from Halko, Martinsson, Tropp, SIAM Rev. 2011 to
+ * obtain an efficient randomized algorithm to estimate the rank in a manner
+ * which guarantees (with very high probability) that the spectral norm error of
+ * the resulting estimate of A is less than eps. The failure probability is
  * alpha^(-nvec), and is determined by the "paranoia factor" alpha > 1, and the
  * number of random vectors nvec used in the algorithm. The total work is
  * proportional to nvec. Larger values of alpha lead to a less optimal estimate
@@ -69,17 +75,18 @@ std::string get_filename_3term(double lambda, double eps);
  *
  * \param[in] a     Result of geqp3 on A, containing upper-triangular matrix R
  * \param[in] eps   Error tolerance for rank estimation
- * \param[in] alpha Paranoia factor
- * \param[in] nvec  # random vectors used in algorithm
+ * \param[in] method Rank estimation method (1, 2, or 3)
+ * \param[in] alpha Paranoia factor (if method = 3)
+ * \param[in] nvec  # random vectors used in algorithm (if method = 3)
  *
  * \return Estimated rank of matrix A
  *
- * \note DESPITE SUPPOSED GUARANTEES, THIS FUNCTION HAS SO FAR YIELDED MIXED
+ * \note DESPITE SUPPOSED GUARANTEES, METHOD 3 HAS SO FAR YIELDED MIXED
  * RESULTS IN LIMITED TESTING, AND SHOULD BE USED WITH CAUTION UNTIL FURTHER
- * TESTING IS DONE.
+ * TESTING IS DONE. DO NOT TRUST DEFAULTS.
  */
-int estimate_rank(fmatrix_const_view a, double eps,
-                  double alpha, int nvec);
+int estimate_rank(fmatrix_const_view a, double eps, int method = 1,
+                  double alpha = 2.0, int nvec = 100);
 
 /*!
  * \brief Simple definition of imaginary frequency analytic continuation kernel
