@@ -91,7 +91,7 @@ nda::array<int, 2> build_dlr2d_if_fullgrid(double lambda, int niom_dense,
   // Extract skeleton nodes from pivots
   auto dlr2d_if = nda::array<int, 2>(niom_skel, 2);
   for (int k = 0; k < niom_skel; ++k) {
-    auto [n1, n2] = ind2sub(piv(k), niom_dense);
+    auto [n1, n2] = ind2sub(piv(k) - 1, niom_dense);
     dlr2d_if(k, 0) = n1 - niom_dense / 2;
     dlr2d_if(k, 1) = n2 - niom_dense / 2;
   }
@@ -216,8 +216,8 @@ nda::array<int, 2> build_dlr2d_if(double lambda, double eps) {
   // Extract 2D DLR nodes from pivots
   auto dlr2d_if = nda::array<int, 2>(niom_dlr2d, 2);
   for (int k = 0; k < niom_dlr2d; ++k) {
-    dlr2d_if(k, 0) = prod_if(piv(k), 0);
-    dlr2d_if(k, 1) = prod_if(piv(k), 1);
+    dlr2d_if(k, 0) = prod_if(piv(k)-1, 0);
+    dlr2d_if(k, 1) = prod_if(piv(k)-1, 1);
   }
 
   fmt::print("Fine system matrix shape = {} x {}\n", 3 * r * r + r,
@@ -359,8 +359,8 @@ nda::array<int, 2> build_dlr2d_if_3term(double lambda, double eps) {
   // Extract skeleton nodes from pivots
   auto dlr2d_if = nda::array<int, 2>(niom_skel, 2);
   for (int k = 0; k < niom_skel; ++k) {
-    dlr2d_if(k, 0) = nu2didx(piv(k), 0);
-    dlr2d_if(k, 1) = nu2didx(piv(k), 1);
+    dlr2d_if(k, 0) = nu2didx(piv(k)-1, 0);
+    dlr2d_if(k, 1) = nu2didx(piv(k)-1, 1);
   }
 
   fmt::print("DLR rank squared = {}\n", r * r);
@@ -502,7 +502,7 @@ build_dlr2d_ifrf(double lambda, double eps) {
   int idx = 0;
   double k = 0, l = 0;
   for (int i = 0; i < r2d; ++i) {
-    idx = piv(i);
+    idx = piv(i)-1;
     if (idx < r * r) {
       std::tie(k, l) = ind2sub_c(idx, r);
       dlr2d_rfidx(i, 0) = 0;
@@ -526,7 +526,7 @@ build_dlr2d_ifrf(double lambda, double eps) {
 
   auto kmat2 = fmatrix(r2d, 3 * r * r);
   for (int k = 0; k < r2d; ++k) {
-    kmat2(k, _) = kmat_copy(_, piv(k));
+    kmat2(k, _) = kmat_copy(_, piv(k)-1);
   }
   piv = 0;
   auto tau2 = nda::vector<dcomplex>(r2d);
@@ -535,8 +535,8 @@ build_dlr2d_ifrf(double lambda, double eps) {
   // Extract skeleton nodes from pivots
   auto dlr2d_if = nda::array<int, 2>(r2d, 2);
   for (int k = 0; k < r2d; ++k) {
-    dlr2d_if(k, 0) = nu2didx(piv(k), 0);
-    dlr2d_if(k, 1) = nu2didx(piv(k), 1);
+    dlr2d_if(k, 0) = nu2didx(piv(k)-1, 0);
+    dlr2d_if(k, 1) = nu2didx(piv(k)-1, 1);
   }
 
   fmt::print("DLR rank squared = {}\n", r * r);
