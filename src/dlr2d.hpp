@@ -220,7 +220,7 @@ nda::array<int, 2> read_dlr2d_if(std::string path, std::string filename);
  * information on how the grids is produced, and their formats.
  */
 std::tuple<nda::array<int, 2>, nda::array<int, 2>>
-read_dlr2d_rfif(std::string path, std::string filename);
+read_dlr2d(std::string path, std::string filename);
 
 /*!
  * \brief Build matrix which maps coefficients of a 2D DLR expansion to its
@@ -315,6 +315,23 @@ vals2coefs_if(fmatrix cf2if, nda::vector_const_view<dcomplex> vals, int r);
 std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>>
 vals2coefs(int r, fmatrix cf2if, nda::vector_const_view<dcomplex> vals,
            nda::array_const_view<int, 2> dlr2d_rf);
+
+/*!
+ * \brief Transform imaginary frequency values of a 2D DLR expansion to coefficients, multiple expansions
+ *
+ * \param[in] r         # basis functions in 1D DLR
+ * \param[in] cf2if     Coefficients to values matrix
+ * \param[in] vals      Values of 2D DLR expansion on imag. freq. grid
+ * \param[in] dlr2d_rf  Real frequency grid indices
+ *
+ * \return Coefficients of 2D DLR expansions
+ *
+ * \note The matrix \p cf2if should be obtained using \ref build_cf2if.
+ */
+std::tuple<nda::array<dcomplex, 4>, nda::array<dcomplex, 2>>
+vals2coefs_many(int r, fmatrix cf2if,
+                nda::array_const_view<dcomplex, 2, nda::F_layout> vals,
+                nda::array_const_view<int, 2> dlr2d_rf);
 
 /*!
  * \brief Transform values of multiple 2D DLR expansions on the 2D DLR imaginary

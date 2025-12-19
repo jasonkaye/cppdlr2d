@@ -120,12 +120,12 @@ nda::array<int, 2> read_dlr2d_if(std::string path, std::string filename) {
 }
 
 std::tuple<nda::array<int, 2>, nda::array<int, 2>>
-read_dlr2d_rfif(std::string path, std::string filename) {
+read_dlr2d(std::string path, std::string filename) {
   h5::file file(path + filename, 'r');
   h5::group mygroup(file);
-  auto dlr2d_rfidx = h5::read<nda::array<int, 2>>(mygroup, "dlr2d_rfidx");
   auto dlr2d_if = h5::read<nda::array<int, 2>>(mygroup, "dlr2d_if");
-  return {dlr2d_rfidx, dlr2d_if};
+  auto dlr2d_rf = h5::read<nda::array<int, 2>>(mygroup, "dlr2d_rf");
+  return {dlr2d_if, dlr2d_rf};
 }
 
 nda::array<int, 2> build_prod_if(double lambda,
@@ -841,6 +841,37 @@ vals2coefs(int r, fmatrix cf2if, nda::vector_const_view<dcomplex> vals,
       coefreg(dlr2d_rf(i, 0), dlr2d_rf(i, 1), dlr2d_rf(i, 2)) = tmp(i);
     } else { // Singular part
       coefsng(dlr2d_rf(i, 1)) = tmp(i);
+    }
+  }
+
+  return {coefreg, coefsng};
+}
+
+std::tuple<nda::array<dcomplex, 4>, nda::array<dcomplex, 2>>
+vals2coefs_many(int r, fmatrix cf2if,
+                nda::array_const_view<dcomplex, 2, nda::F_layout> vals,
+                nda::array_const_view<int, 2> dlr2d_rf) {
+
+  int m = vals.shape(0);
+  int nrhs = vals.shape(1);
+  int n = dlr2d_rf.shape(0);
+  auto tmp = fmatrix(std::max(m, n), nrhs);
+  tmp(nda::range(m), _) = vals;
+
+  auto s = nda::vector<double>(m); // Singular values (not needed)
+  int rank = 0;                    // Rank (not needed)
+  nda::lapack::gelss(cf2if, tmp, s, 0.0, rank);
+
+  auto coefreg = nda::zeros<dcomplex>(nrhs, 3, r, r);
+  auto coefsng = nda::zeros<dcomplex>(nrhs, r);
+
+  for (int j = 0; j < nrhs; ++j) {
+    for (int i = 0; i < n; ++i) {
+      if (dlr2d_rf(i, 0) < 3) { // Regular part
+        coefreg(j, dlr2d_rf(i, 0), dlr2d_rf(i, 1), dlr2d_rf(i, 2)) = tmp(i, j);
+      } else { // Singular part
+        coefsng(j, dlr2d_rf(i, 1)) = tmp(i, j);
+      }
     }
   }
 
