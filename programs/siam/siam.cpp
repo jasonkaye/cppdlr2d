@@ -1,7 +1,7 @@
 #include "siam.hpp"
 #include "../src/utils.hpp"
-#include <fmt/format.h>
 #include <chrono>
+#include <fmt/format.h>
 
 nda::vector<double> siam_allfuncs(double beta, double u, double lambda,
                                   double eps, int niomtst, int nbos_tst,
@@ -31,7 +31,7 @@ nda::vector<double> siam_allfuncs(double beta, double u, double lambda,
   if (!compressbasis) {
     dlr2d_if = read_dlr2d_if(path, filename);
   } else {
-    std::tie(dlr2d_rfidx, dlr2d_if) = read_dlr2d_rfif(path, filename);
+    std::tie(dlr2d_rfidx, dlr2d_if) = read_dlr2d(path, filename);
   }
 
   // Get DLR nodes for particle-hole channel
@@ -155,7 +155,7 @@ nda::vector<double> siam_allfuncs(double beta, double u, double lambda,
 
   auto start = std::chrono::high_resolution_clock::now();
   if (!compressbasis) {
-    auto valsall  = fmatrix(niom, 6);
+    auto valsall = fmatrix(niom, 6);
     valsall(_, 0) = chi_s;
     valsall(_, 1) = chi_d;
     valsall(_, 2) = chi_m;
@@ -618,7 +618,7 @@ nda::vector<double> siam_allfuncs_3term(double beta, double u, double lambda,
   fmt::print("Obtaining DLR coefficients of chi, lambda...\n");
   auto start = std::chrono::high_resolution_clock::now();
 
-  auto valsall  = fmatrix(niom, 6);
+  auto valsall = fmatrix(niom, 6);
   valsall(_, 0) = chi_s;
   valsall(_, 1) = chi_d;
   valsall(_, 2) = chi_m;
