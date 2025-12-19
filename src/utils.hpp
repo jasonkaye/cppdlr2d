@@ -30,14 +30,15 @@ std::string get_filename(double lambda, double eps, int niom_dense);
  * \brief Get standard filename used by \ref build_dlr2d_if and \ref
  * build_dlr2d_ifrf to store 2D Matsubara frequency DLR grid
  *
- * \param[in] lambda      DLR cutoff
- * \param[in] eps         Error tolerance
- * \param[in] compressed  (=false (default) for use with \ref build_dlr2d_if,
- * =true for use with \ref build_dlr2d_ifrf)
+ * \param[in] lambda        DLR cutoff
+ * \param[in] eps           Error tolerance
+ * \param[in] compressgrid  Compress grid using pivoted QR? (default: true)
+ * \param[in] compressbasis Compress basis using pivoted QR? (default: false)
  *
  * \return Standard filename describing grid parameters
  */
-std::string get_filename(double lambda, double eps, bool compressed = false);
+std::string get_filename(double lambda, double eps, bool compressgrid,
+                         bool compressbasis);
 
 /*!
  * \brief Get standard filename used by \ref build_dlr2d_if_3term to store 2D

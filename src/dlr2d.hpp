@@ -8,8 +8,8 @@ namespace dlr2d {
  * \brief Obtain 2D DLR "product" Matsubara frequency grid
  *
  * This function builds a grid composed of a union of products of 1D DLR grids,
- * as described by Eq. 21 of Kiese et al., "Discrete Lehmann representation of
- * three-point functions", PRB (2025). This is the "fine" grid from which we
+ * as described by Eq. 21 of Kiese et al. ["Discrete Lehmann representation of
+ * three-point functions", PRB (2025)]. This is the "fine" grid from which we
  * typically select the 2D DLR grid points. We note that here, the grid points
  * corresponding to the fourth row of Eq. 21 (the contribution corresponding to
  * singular terms) are omitted, as these points are redundant with the other
@@ -40,36 +40,54 @@ void build_prod_if(double lambda, nda::vector_const_view<double> dlr_rf,
                    const std::string &path, const std::string &filename);
 
 /*!
- * \brief Obtain 2D DLR Matsubara frequency grid
+ * \brief Obtain 2D DLR Matsubara frequency grid and real frequency grids
  *
  * This function generates the 2D DLR Matsubara frequency grid points in terms
- * of Matsubara frequency index pairs. It uses the method proposed in Kiese et
- * al., "Discrete Lehmann representation of three-point functions",
- * arXiv:2405.06716, which involves subselecting from a fine Matsubara frequency
- * grid from combinations of 1D DLR grid points.
+ * of Matsubara frequency pairs, as well as the real frequency pairs determining
+ * the 2D DLR basis functions. Both grids are represented as arrays of index
+ * pairs.
  *
- * \param[in] lambda      DLR cutoff parameter
- * \param[in] eps         Error tolerance
+ * If compressgrid is false, the imaginary frequency grid is taken to be the
+ * "product" grid produced by \ref build_prod_if. If true, this grid is
+ * compressed using pivoted QR.
  *
- * \return Grid points returned as an array of Matsubara frequency index pairs.
+ * If compressbasis is false, the real frequency grid is taken to be a product
+ * of 1D DLR real frequency grids. If true, this grid is compressed using
+ * pivoted QR.
+ *
+ * The method proposed in Kiese et al. ["Discrete Lehmann representation of
+ * three-point functions", PRB (2025)] uses compressgrid=true and
+ * compressbasis=false.
+ *
+ * \param[in] lambda        DLR cutoff parameter
+ * \param[in] eps           Error tolerance
+ * \param[in] compressgrid  Compress grid using pivoted QR? (default: true)
+ * \param[in] compressbasis Compress basis using pivoted QR? (default: false)
+ *
+ * \return Tuple containing 2D DLR real and imaginary (respectively) frequency
+ * grids as arrays of index pairs.
  *
  * \note For a fermionic Matsubara frequency i*nu_n = (2n+1)*pi/beta, we refer
  * to n as its index. An index pair (m, n) corresponds to the 2D Matsubara
- * frequency point (i nu_m, i nu_n).
+ * frequency point (i nu_m, i nu_n). For a real frequency pair, its indices
+ * refer to that of the corresponding 1D DLR real frequency grid point.
  */
-nda::array<int, 2> build_dlr2d_if(double lambda, double eps);
+std::tuple<nda::array<int, 2>, nda::array<int, 2>>
+build_dlr2d(double lambda, double eps, bool compressgrid = true,
+            bool compressbasis = false);
 
 /*!
  * \copydoc build_dlr2d_if(double, double)
  *
- * Rather than returning the grid, this overload writes the 2D DLR Matsubara
+ * Rather than returning the grids, this overload writes the 2D DLR Matsubara
  * frequency index pairs to an HDF5 file.
  *
  * \param[in] path        Path to directory in which to save index pairs
  * \param[in] filename    Name of file in which to save index pairs
  */
-void build_dlr2d_if(double lambda, double eps, const std::string &path,
-                    const std::string &filename);
+void build_dlr2d(double lambda, double eps, const std::string &path,
+                    const std::string &filename, bool compressgrid = true,
+                    bool compressbasis = false);
 
 /*!
  * \brief Obtain 2D DLR Matsubara frequency grid using three-term DLR

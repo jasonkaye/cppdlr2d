@@ -12,16 +12,24 @@ std::string get_filename(double lambda, double eps, int niom_dense) {
   return filenameStream.str();
 }
 
-std::string get_filename(double lambda, double eps, bool compressed) {
+std::string get_filename(double lambda, double eps, bool compressgrid,
+                         bool compressbasis) {
 
   std::ostringstream filenameStream;
-  if (!compressed) {
-    filenameStream << "dlr2d_if_" << lambda << "_" << std::scientific
-                   << std::setprecision(2) << eps << ".h5";
+  auto str = "";
+  if (compressgrid && compressbasis) {
+    str = "compressed_if_rf";
+  } else if (compressgrid && !compressbasis) {
+    str = "compressed_if";
+  } else if (!compressgrid && compressbasis) {
+    str = "compressed_rf";
   } else {
-    filenameStream << "dlr2d_ifrf_" << lambda << "_" << std::scientific
-                   << std::setprecision(2) << eps << ".h5";
+    str = "overcomplete";
   }
+
+  filenameStream << "dlr2d_" << str << "_" << lambda << "_" << std::scientific
+                 << std::setprecision(2) << eps << ".h5";
+
   return filenameStream.str();
 }
 

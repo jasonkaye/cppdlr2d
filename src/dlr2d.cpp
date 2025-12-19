@@ -171,7 +171,8 @@ void build_prod_if(double lambda, nda::vector_const_view<double> dlr_rf,
   h5::write(mygroup, "prod_if", prod_if);
 }
 
-nda::array<int, 2> build_dlr2d_if(double lambda, double eps) {
+std::tuple<nda::array<int, 2>, nda::array<int, 2>>
+build_dlr2d(double lambda, double eps, bool compressgrid, bool compressbasis) {
 
   int rankmethod = 1;
 
@@ -185,57 +186,108 @@ nda::array<int, 2> build_dlr2d_if(double lambda, double eps) {
   // Get system matrix for fine grid (union of products of shifted DLR grids)
   auto kmat = build_cf2if(1.0, dlr_rf, prod_if);
 
-  // Pivoted QR to determine sampling nodes
-  auto kmatt = fmatrix(transpose(kmat));
-  auto start = std::chrono::high_resolution_clock::now();
-  auto piv = nda::zeros<int>(3 * r * r);
-  auto tau = nda::vector<dcomplex>(3 * r * r);
-  nda::lapack::geqp3(kmatt, piv, tau);
+  auto dlr2d_if = nda::array<int, 2>();
 
-  // Estimate rank
-  int niom_dlr2d = 0;
-  if (rankmethod == 1) {
-    for (int k = 0; k < 3 * r * r; ++k) {
-      if (abs(kmatt(k, k)) < eps) {
-        niom_dlr2d = k;
-        break;
-      }
-    }
+  // TODO: Fill in dlr2d_rf and dlr2d_if with the correct points whether
+  // compressgrid/compressbasis are true/false. For example, for dlr2d_rf, if
+  // compressbasis is false, just don't subselect. Use the same code as below
+  // (taken outside of the if statement), and just take piv = 0, 1, 2, ...,
+  // 3*r*r + r.
+
+  int r2d = 0;
+  int nrow = kmat.shape(0);
+  int ncol = kmat.shape(1);
+  auto rf_idx = nda::array<int, 1>();
+  if (compressbasis) { // Compress basis using pivoted QR
+    auto kmat_copy = fmatrix(kmat);
+    auto piv = nda::zeros<int>(ncol);
+    auto tau = nda::vector<dcomplex>(ncol);
+    nda::lapack::geqp3(kmat_copy, piv, tau);
+    r2d = estimate_rank(kmat_copy, eps, 1);
+    rf_idx = piv(nda::range(r2d)) - 1; // Take selected frequency pairs
+    ncol = r2d;
   } else {
-    double errsq = 0;
-    for (int k = 3 * r * r - 1; k >= 0; --k) {
-      errsq += pow(abs(kmatt(k, k)), 2);
-      if (sqrt(errsq) > eps) {
-        niom_dlr2d = k;
-        break;
-      }
+    rf_idx = nda::arange<int>(ncol); // Take all frequency pairs
+  }
+
+  // Extract frequency pairs
+  auto dlr2d_rf = nda::array<int, 2>(ncol, 3);
+  int idx = 0;
+  double k = 0, l = 0;
+  for (int i = 0; i < ncol; ++i) {
+    idx = rf_idx(i);
+    if (idx < r * r) {
+      std::tie(k, l) = ind2sub_c(idx, r);
+      dlr2d_rf(i, 0) = 0;
+      dlr2d_rf(i, 1) = k;
+      dlr2d_rf(i, 2) = l;
+    } else if (idx < 2 * r * r) {
+      std::tie(k, l) = ind2sub_c(idx - r * r, r);
+      dlr2d_rf(i, 0) = 1;
+      dlr2d_rf(i, 1) = k;
+      dlr2d_rf(i, 2) = l;
+    } else if (idx < 3 * r * r) {
+      std::tie(k, l) = ind2sub_c(idx - 2 * r * r, r);
+      dlr2d_rf(i, 0) = 2;
+      dlr2d_rf(i, 1) = k;
+      dlr2d_rf(i, 2) = l;
+    } else {
+      dlr2d_rf(i, 0) = 3;
+      dlr2d_rf(i, 1) = idx - 3 * r * r;
     }
   }
-  // int niom_dlr2d = estimate_rank(kmatt, eps, 2.0, 100);
 
-  // Extract 2D DLR nodes from pivots
-  auto dlr2d_if = nda::array<int, 2>(niom_dlr2d, 2);
-  for (int k = 0; k < niom_dlr2d; ++k) {
-    dlr2d_if(k, 0) = prod_if(piv(k)-1, 0);
-    dlr2d_if(k, 1) = prod_if(piv(k)-1, 1);
+  auto if_idx = nda::array<int, 1>();
+  if (compressgrid) {
+
+    // Extract selected columns of kmat and transpose
+    auto kmat_copy = fmatrix(nrow, ncol);
+    for (int j = 0; j < ncol; ++j) {
+      kmat_copy(nda::range::all, j) = kmat(nda::range::all, rf_idx(j));
+    }
+    // auto kmat_copy = make_regular(kmat(nda::range::all, rf_idx)); // TODO:
+    // this fails!
+
+    auto kmatt = fmatrix(transpose(kmat_copy));
+    auto piv = nda::zeros<int>(nrow);
+    auto tau = nda::vector<dcomplex>(nrow);
+    nda::lapack::geqp3(kmatt, piv, tau);
+
+    if (!compressbasis) {
+      r2d = estimate_rank(kmatt, eps, 1);
+    }
+
+    if_idx = piv(nda::range(r2d)) - 1;
+    nrow = r2d;
+  } else {
+    if_idx = nda::arange<int>(nrow);
+  }
+
+  // Extract imaginary frequency pairs from pivots
+  dlr2d_if = nda::array<int, 2>(nrow, 2);
+  for (int k = 0; k < nrow; ++k) {
+    dlr2d_if(k, 0) = prod_if(if_idx(k), 0);
+    dlr2d_if(k, 1) = prod_if(if_idx(k), 1);
   }
 
   fmt::print("Fine system matrix shape = {} x {}\n", 3 * r * r + r,
              3 * r * r + r);
-  fmt::print("System matrix rank = {}\n", niom_dlr2d);
+  fmt::print("System matrix rank = {}\n", r2d);
   fmt::print("DLR rank squared = {}\n", r * r);
 
-  return dlr2d_if;
+  return {dlr2d_if, dlr2d_rf};
 }
 
-void build_dlr2d_if(double lambda, double eps, std::string path,
-                    std::string filename) {
-  auto dlr2d_if = build_dlr2d_if(lambda, eps);
+void build_dlr2d(double lambda, double eps, std::string path,
+                 std::string filename, bool compressgrid, bool compressbasis) {
+  auto [dlr2d_if, dlr2d_rf] =
+      build_dlr2d(lambda, eps, compressgrid, compressbasis);
 
-  // Write dlr2d_if to hdf5 file
+  // Write to hdf5 file
   h5::file file(path + filename, 'w');
   h5::group mygroup(file);
   h5::write(mygroup, "dlr2d_if", dlr2d_if);
+  h5::write(mygroup, "dlr2d_rf", dlr2d_rf);
 }
 
 // Obtain 2D DLR nodes using reduced fine grid, mixed fermionic/bosonic
@@ -359,8 +411,8 @@ nda::array<int, 2> build_dlr2d_if_3term(double lambda, double eps) {
   // Extract skeleton nodes from pivots
   auto dlr2d_if = nda::array<int, 2>(niom_skel, 2);
   for (int k = 0; k < niom_skel; ++k) {
-    dlr2d_if(k, 0) = nu2didx(piv(k)-1, 0);
-    dlr2d_if(k, 1) = nu2didx(piv(k)-1, 1);
+    dlr2d_if(k, 0) = nu2didx(piv(k) - 1, 0);
+    dlr2d_if(k, 1) = nu2didx(piv(k) - 1, 1);
   }
 
   fmt::print("DLR rank squared = {}\n", r * r);
@@ -502,7 +554,7 @@ build_dlr2d_ifrf(double lambda, double eps) {
   int idx = 0;
   double k = 0, l = 0;
   for (int i = 0; i < r2d; ++i) {
-    idx = piv(i)-1;
+    idx = piv(i) - 1;
     if (idx < r * r) {
       std::tie(k, l) = ind2sub_c(idx, r);
       dlr2d_rfidx(i, 0) = 0;
@@ -526,7 +578,7 @@ build_dlr2d_ifrf(double lambda, double eps) {
 
   auto kmat2 = fmatrix(r2d, 3 * r * r);
   for (int k = 0; k < r2d; ++k) {
-    kmat2(k, _) = kmat_copy(_, piv(k)-1);
+    kmat2(k, _) = kmat_copy(_, piv(k) - 1);
   }
   piv = 0;
   auto tau2 = nda::vector<dcomplex>(r2d);
@@ -535,8 +587,8 @@ build_dlr2d_ifrf(double lambda, double eps) {
   // Extract skeleton nodes from pivots
   auto dlr2d_if = nda::array<int, 2>(r2d, 2);
   for (int k = 0; k < r2d; ++k) {
-    dlr2d_if(k, 0) = nu2didx(piv(k)-1, 0);
-    dlr2d_if(k, 1) = nu2didx(piv(k)-1, 1);
+    dlr2d_if(k, 0) = nu2didx(piv(k) - 1, 0);
+    dlr2d_if(k, 1) = nu2didx(piv(k) - 1, 1);
   }
 
   fmt::print("DLR rank squared = {}\n", r * r);

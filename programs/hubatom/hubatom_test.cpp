@@ -1,7 +1,7 @@
 #include "hubatom.hpp"
+#include <chrono>
 #include <fmt/format.h>
 #include <gtest/gtest.h>
-#include <chrono>
 
 /*!
  * \brief Test DLR expansion of density correlation function, singlet vertex
@@ -17,10 +17,14 @@ TEST(hubatom, main) {
   double eps = 1e-12; // DLR tolerance
   int niomtst = 512;  // # imag freq test points (must be even)
   int nbos_tst = 64;  // # pts in test grid for polarization
+  bool compressgrid = true;
+  bool compressbasis = false;
 
   fmt::print("\nBuilding 2D DLR grid...\n");
   auto start = std::chrono::high_resolution_clock::now();
-  auto dlr2d_if = build_dlr2d_if(lambda, eps);
+  // auto dlr2d_if = build_dlr2d_if(lambda, eps);
+  auto [dlr2d_if, dlr2d_rf] =
+      build_dlr2d(lambda, eps, compressgrid, compressbasis);
   auto end = std::chrono::high_resolution_clock::now();
   fmt::print("\nTime: {}\n\n",
              std::chrono::duration<double>(end - start).count());
