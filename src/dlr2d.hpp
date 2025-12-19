@@ -77,7 +77,7 @@ build_dlr2d(double lambda, double eps, bool compressgrid = true,
             bool compressbasis = false);
 
 /*!
- * \copydoc build_dlr2d_if(double, double)
+ * \copydoc build_dlr2d(double, double, bool, bool)
  *
  * Rather than returning the grids, this overload writes the 2D DLR Matsubara
  * frequency index pairs to an HDF5 file.
@@ -86,8 +86,8 @@ build_dlr2d(double lambda, double eps, bool compressgrid = true,
  * \param[in] filename    Name of file in which to save index pairs
  */
 void build_dlr2d(double lambda, double eps, const std::string &path,
-                    const std::string &filename, bool compressgrid = true,
-                    bool compressbasis = false);
+                 const std::string &filename, bool compressgrid = true,
+                 bool compressbasis = false);
 
 /*!
  * \brief Obtain 2D DLR Matsubara frequency grid using three-term DLR
@@ -228,12 +228,25 @@ read_dlr2d_rfif(std::string path, std::string filename);
  *
  * \param[in] beta      Inverse temperature
  * \param[in] dlr_rf    1D DLR real frequencies
- * \param[in] if_idx    2D imaginary frequency grid indices
+ * \param[in] dlr2d_if  2D imaginary frequency grid indices
  *
  * \return Coefficients to values matrix
  */
-fmatrix build_cf2if(double beta, nda::vector<double> dlr_rf,
-                    nda::array<int, 2> if_idx);
+fmatrix build_cf2if(double beta, nda::vector_const_view<double> dlr_rf,
+                    nda::array_const_view<int, 2> dlr2d_if);
+
+/*!
+ *  \copydoc build_cf2if(double, nda::vector_const_view<double>,
+ * nda::array_const_view<int, 2>)
+ *
+ * Allows specifying 2D DLR real frequencies as subset of full product grid.
+ *
+ * \param[in] dlr2d_rf  2D DLR real frequency grid indices
+ */
+fmatrix build_cf2if(double beta, nda::vector_const_view<double> dlr_rf,
+                    nda::array_const_view<int, 2> dlr2d_if,
+                    nda::array_const_view<int, 2> dlr2d_rf);
+
 /*!
  * \brief Build matrix which maps coefficients of a 2D DLR expansion to its
  * values on the 2D DLR imaginary (Matsubara) frequency grid, using three-term

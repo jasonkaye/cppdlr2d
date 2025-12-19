@@ -278,8 +278,9 @@ build_dlr2d(double lambda, double eps, bool compressgrid, bool compressbasis) {
   return {dlr2d_if, dlr2d_rf};
 }
 
-void build_dlr2d(double lambda, double eps, std::string path,
-                 std::string filename, bool compressgrid, bool compressbasis) {
+void build_dlr2d(double lambda, double eps, const std::string &path,
+                 const std::string &filename, bool compressgrid,
+                 bool compressbasis) {
   auto [dlr2d_if, dlr2d_rf] =
       build_dlr2d(lambda, eps, compressgrid, compressbasis);
 
@@ -608,11 +609,11 @@ void build_dlr2d_ifrf(double lambda, double eps, std::string path,
   h5::write(mygroup, "dlr2d_if", dlr2d_if);
 }
 
-fmatrix build_cf2if(double beta, nda::vector<double> dlr_rf,
-                    nda::array<int, 2> if_idx) {
+fmatrix build_cf2if(double beta, nda::vector_const_view<double> dlr_rf,
+                    nda::array_const_view<int, 2> dlr2d_if) {
 
   int r = dlr_rf.size();
-  int n_if = if_idx.shape(0);
+  int n_if = dlr2d_if.shape(0);
 
   // Get system matrix for dense grid
   auto cf2if = fmatrix(n_if, 3 * r * r + r);
@@ -622,14 +623,14 @@ fmatrix build_cf2if(double beta, nda::vector<double> dlr_rf,
     for (int l = 0; l < r; ++l) {
       for (int n = 0; n < n_if; ++n) {
         cf2if(n, k * r + l) = beta * beta *
-                              k_if(if_idx(n, 0), dlr_rf(k), Fermion) *
-                              k_if(if_idx(n, 1), dlr_rf(l), Fermion);
+                              k_if(dlr2d_if(n, 0), dlr_rf(k), Fermion) *
+                              k_if(dlr2d_if(n, 1), dlr_rf(l), Fermion);
         cf2if(n, r * r + k * r + l) =
-            beta * beta * k_if(if_idx(n, 1), dlr_rf(k), Fermion) *
-            k_if_boson(if_idx(n, 0) + if_idx(n, 1) + 1, dlr_rf(l));
+            beta * beta * k_if(dlr2d_if(n, 1), dlr_rf(k), Fermion) *
+            k_if_boson(dlr2d_if(n, 0) + dlr2d_if(n, 1) + 1, dlr_rf(l));
         cf2if(n, 2 * r * r + k * r + l) =
-            beta * beta * k_if(if_idx(n, 0), dlr_rf(k), Fermion) *
-            k_if_boson(if_idx(n, 0) + if_idx(n, 1) + 1, dlr_rf(l));
+            beta * beta * k_if(dlr2d_if(n, 0), dlr_rf(k), Fermion) *
+            k_if_boson(dlr2d_if(n, 0) + dlr2d_if(n, 1) + 1, dlr_rf(l));
       }
     }
   }
@@ -637,11 +638,51 @@ fmatrix build_cf2if(double beta, nda::vector<double> dlr_rf,
   // Singular part
   for (int k = 0; k < r; ++k) {
     for (int n = 0; n < n_if; ++n) {
-      if (if_idx(n, 0) == -if_idx(n, 1) - 1) {
+      if (dlr2d_if(n, 0) == -dlr2d_if(n, 1) - 1) {
         cf2if(n, 3 * r * r + k) =
-            beta * beta * k_if(if_idx(n, 0), dlr_rf(k), Fermion);
+            beta * beta * k_if(dlr2d_if(n, 0), dlr_rf(k), Fermion);
       } else {
         cf2if(n, 3 * r * r + k) = 0;
+      }
+    }
+  }
+
+  return cf2if;
+}
+
+fmatrix build_cf2if(double beta, nda::vector_const_view<double> dlr_rf,
+                    nda::array_const_view<int, 2> dlr2d_if,
+                    nda::array_const_view<int, 2> dlr2d_rf) {
+  int r = dlr_rf.size();
+  int n_if = dlr2d_if.shape(0);
+  int n_rf = dlr2d_rf.shape(0);
+
+  // Get system matrix for dense grid
+  auto cf2if = fmatrix(n_if, n_rf);
+
+  // Regular part
+  int k = 0, l = 0;
+  for (int i = 0; i < n_rf; ++i) {
+    k = dlr2d_rf(i, 1);
+    l = dlr2d_rf(i, 2);
+    for (int n = 0; n < n_if; ++n) {
+      if (dlr2d_rf(i, 0) == 0) {
+        cf2if(n, i) = beta * beta * k_if(dlr2d_if(n, 0), dlr_rf(k), Fermion) *
+                      k_if(dlr2d_if(n, 1), dlr_rf(l), Fermion);
+      } else if (dlr2d_rf(i, 0) == 1) {
+        cf2if(n, i) =
+            beta * beta * k_if(dlr2d_if(n, 1), dlr_rf(k), Fermion) *
+            k_if(dlr2d_if(n, 0) + dlr2d_if(n, 1) + 1, dlr_rf(l), Boson);
+      } else if (dlr2d_rf(i, 0) == 2) {
+        cf2if(n, i) =
+            beta * beta * k_if(dlr2d_if(n, 0), dlr_rf(k), Fermion) *
+            k_if(dlr2d_if(n, 0) + dlr2d_if(n, 1) + 1, dlr_rf(l), Boson);
+      } else {
+        if (dlr2d_if(n, 0) == -dlr2d_if(n, 1) - 1) {
+          cf2if(n, i) = beta * beta * k_if(dlr2d_if(n, 0), dlr_rf(k), Fermion);
+        } else {
+          cf2if(n, i) = 0;
+        }
       }
     }
   }

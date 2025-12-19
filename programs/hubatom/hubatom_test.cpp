@@ -38,7 +38,7 @@ TEST(hubatom, main) {
   dlr2d_if_ph(_, 0) = -dlr2d_if(_, 0) - 1;
   dlr2d_if_ph(_, 1) = dlr2d_if(_, 1);
 
-  auto kmat = build_cf2if(beta, dlr_rf, dlr2d_if);
+  auto kmat = build_cf2if(beta, dlr_rf, dlr2d_if, dlr2d_rf);
 
   int niom = dlr2d_if.shape(0);
 
