@@ -819,6 +819,34 @@ vals2coefs_if(fmatrix cf2if, nda::vector_const_view<dcomplex> vals, int r) {
   return {coefreg, coefsng};
 }
 
+std::tuple<nda::array<dcomplex, 3>, nda::array<dcomplex, 1>>
+vals2coefs(int r, fmatrix cf2if, nda::vector_const_view<dcomplex> vals,
+           nda::array_const_view<int, 2> dlr2d_rf) {
+
+  int m = vals.size();
+  int n = dlr2d_rf.shape(0);
+  auto tmp = nda::array<dcomplex, 1>(std::max(m, n));
+  tmp(nda::range(m)) = vals;
+
+  auto s = nda::vector<double>(m); // Singular values (not needed)
+  int rank = 0;                    // Rank (not needed)
+  nda::lapack::gelss(cf2if, tmp, s, 0.0, rank);
+
+  auto coefreg = nda::zeros<dcomplex>(3, r, r);
+  auto coefsng = nda::zeros<dcomplex>(r);
+
+  int idx = 0, j = 0, k = 0, l = 0;
+  for (int i = 0; i < n; ++i) {
+    if (dlr2d_rf(i, 0) < 3) { // Regular part
+      coefreg(dlr2d_rf(i, 0), dlr2d_rf(i, 1), dlr2d_rf(i, 2)) = tmp(i);
+    } else { // Singular part
+      coefsng(dlr2d_rf(i, 1)) = tmp(i);
+    }
+  }
+
+  return {coefreg, coefsng};
+}
+
 std::tuple<nda::array<dcomplex, 4>, nda::array<dcomplex, 2>>
 vals2coefs_if_many(fmatrix cf2if,
                    nda::array_const_view<dcomplex, 2, nda::F_layout> vals,

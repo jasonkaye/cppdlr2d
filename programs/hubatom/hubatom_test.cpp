@@ -80,8 +80,8 @@ TEST(hubatom, main) {
   fmt::print("System matrix size = {} x {}\n\n", kmat.shape(0), kmat.shape(1));
 
   start = std::chrono::high_resolution_clock::now();
-  auto [chi_d_c, chi_d_csing] = vals2coefs_if(kmat, chi_d, r);
-  auto [lam_s_c, lam_s_csing] = vals2coefs_if(kmat, lam_s, r);
+  auto [chi_d_c, chi_d_csing] = vals2coefs(r, kmat, chi_d, dlr2d_rf);
+  auto [lam_s_c, lam_s_csing] = vals2coefs(r, kmat, lam_s, dlr2d_rf);
   end = std::chrono::high_resolution_clock::now();
   fmt::print("Time: {}\n\n",
              std::chrono::duration<double>(end - start).count());
