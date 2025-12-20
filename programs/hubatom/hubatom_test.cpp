@@ -4,21 +4,12 @@
 #include <gtest/gtest.h>
 
 /*!
- * \brief Test DLR expansion of density correlation function, singlet vertex
- * function, and calculation of singlet polarization for Hubbard atom
- *
- * \note The function tests both the particle/particle and particle/hole
- * DLR expansions, and the algorithm for computing the polarization.
+ * \brief Test 2D DLR expansion of singlet correlation function, spin vertex
+ * function, and calculation of spin polarization for Hubbard atom
  */
-TEST(hubatom, main) {
-  double beta = 64;   // Inverse temperature
-  double u = 1.0;     // Interaction
-  double lambda = 64; // DLR cutoff
-  double eps = 1e-12; // DLR tolerance
-  int niomtst = 512;  // # imag freq test points (must be even)
-  int nbos_tst = 64;  // # pts in test grid for polarization
-  bool compressgrid = true;
-  bool compressbasis = false;
+void hubatom_test_driver(double beta, double u, double lambda, double eps,
+                         int niomtst, int nbos_tst, bool compressgrid,
+                         bool compressbasis, double tol) {
 
   fmt::print("\nBuilding 2D DLR grid...\n");
   auto start = std::chrono::high_resolution_clock::now();
@@ -150,22 +141,17 @@ TEST(hubatom, main) {
   fmt::print("L2 error:   {}\n", lam_m_l2err);
   fmt::print("Linf error: {}\n\n", lam_m_linferr);
 
-  EXPECT_LT(chi_s_l2err, 10 * eps);
-  EXPECT_LT(lam_m_l2err, 10 * eps);
+  EXPECT_LT(chi_s_l2err, tol);
+  EXPECT_LT(lam_m_l2err, tol);
 
   // Compute polarization from DLR expansions
   auto itops = imtime_ops(lambda, dlr_rf);
 
   auto pol_m = polarization(beta, lambda, eps, itops, ifops_fer, ifops_bos, grc,
                             gc, lam_m_c, lam_m_csing);
-  // pol_m *= -1.0 / 2;
-
   auto pol_m_c = ifops_bos.vals2coefs(beta, pol_m); // DLR expansion
 
   // Compute true polarization
-  // std::complex<double> pol0_s_tru =
-  //     beta * -k_it(0.0, -u / 2, beta) /
-  //     (2 * beta * u * -k_it(0.0, -u / 2, beta) - 4);
   std::complex<double> pol0_m_tru = beta * -k_it(0.0, u / 2, beta) /
                                     (-beta * u * -k_it(0.0, u / 2, beta) - 2);
 
@@ -193,5 +179,61 @@ TEST(hubatom, main) {
   fmt::print("L2 error:   {}\n", pol_m_l2err);
   fmt::print("Linf error: {}\n\n", pol_m_linferr);
 
-  EXPECT_LT(pol_m_l2err, 10 * eps);
+  EXPECT_LT(pol_m_l2err, tol);
+}
+
+TEST(hubatom, compress_if) {
+  double beta = 64;           // Inverse temperature
+  double u = 1.0;             // Interaction
+  double lambda = 64;         // DLR cutoff
+  double eps = 1e-12;         // DLR tolerance
+  int niomtst = 512;          // # imag freq test points (must be even)
+  int nbos_tst = 64;          // # pts in test grid for polarization
+  bool compressgrid = true;   // Compress grid using pivoted QR?
+  bool compressbasis = false; // Compress basis using pivoted QR?
+  double tol = 10 * eps;      // Test tolerance
+  hubatom_test_driver(beta, u, lambda, eps, niomtst, nbos_tst, compressgrid,
+                      compressbasis, tol);
+}
+
+TEST(hubatom, compress_rf) {
+  double beta = 64;          // Inverse temperature
+  double u = 1.0;            // Interaction
+  double lambda = 64;        // DLR cutoff
+  double eps = 1e-12;        // DLR tolerance
+  int niomtst = 512;         // # imag freq test points (must be even)
+  int nbos_tst = 64;         // # pts in test grid for polarization
+  bool compressgrid = false; // Compress grid using pivoted QR?
+  bool compressbasis = true; // Compress basis using pivoted QR?
+  double tol = 10 * eps;     // Test tolerance
+  hubatom_test_driver(beta, u, lambda, eps, niomtst, nbos_tst, compressgrid,
+                      compressbasis, tol);
+}
+
+TEST(hubatom, compress_if_rf) {
+  double beta = 64;          // Inverse temperature
+  double u = 1.0;            // Interaction
+  double lambda = 64;        // DLR cutoff
+  double eps = 1e-12;        // DLR tolerance
+  int niomtst = 512;         // # imag freq test points (must be even)
+  int nbos_tst = 64;         // # pts in test grid for polarization
+  bool compressgrid = true;  // Compress grid using pivoted QR?
+  bool compressbasis = true; // Compress basis using pivoted QR?
+  double tol = 100 * eps;    // Test tolerance
+  hubatom_test_driver(beta, u, lambda, eps, niomtst, nbos_tst, compressgrid,
+                      compressbasis, tol);
+}
+
+TEST(hubatom, overcomplete) {
+  double beta = 64;           // Inverse temperature
+  double u = 1.0;             // Interaction
+  double lambda = 64;         // DLR cutoff
+  double eps = 1e-12;         // DLR tolerance
+  int niomtst = 512;          // # imag freq test points (must be even)
+  int nbos_tst = 64;          // # pts in test grid for polarization
+  bool compressgrid = false;  // Compress grid using pivoted QR?
+  bool compressbasis = false; // Compress basis using pivoted QR?
+  double tol = 100 * eps;     // Test tolerance
+  hubatom_test_driver(beta, u, lambda, eps, niomtst, nbos_tst, compressgrid,
+                      compressbasis, tol);
 }
