@@ -25,16 +25,13 @@ using namespace dlr2d;
  * polarization
  * \param[in] compressgrid  Overcomplete or compressed DLR grid
  * \param[in] compressbasis Overcomplete or compressed DLR basis
- * \param[in] niom_dense    # Matsubara freqs in fine grid (only used if
- * reduced=false)
  *
  * \return Vector containing problem parameters and errors, for analysis and
  * plotting
  */
 nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
                                      double eps, int niomtst, int nbos_tst,
-                                     bool compressgrid, bool compressbasis,
-                                     int niom_dense = 0);
+                                     bool compressgrid, bool compressbasis);
 
 /*!
  * \brief Driver function for Hubbard atom example, all functions, using

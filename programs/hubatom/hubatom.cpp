@@ -7,8 +7,7 @@ using namespace dlr2d;
 
 nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
                                      double eps, int niomtst, int nbos_tst,
-                                     bool compressgrid, bool compressbasis,
-                                     int niom_dense) {
+                                     bool compressgrid, bool compressbasis) {
 
   auto path = "../../../dlr2d_if_data/"; // Path for DLR 2D grid data
 
