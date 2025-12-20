@@ -10,7 +10,7 @@ int main() {
   bool compressbasis = false; // Overcomplete or compressed basis
   bool threeterm = false;     // 2+1 or 3+1-term 2D DLR
 
-  auto filename = "hubatom_eps12_compress_if_rf";
+  auto filename = "hubatom_eps12_compress_if";
 
   int nexp = 11;
   int nresult = 42;

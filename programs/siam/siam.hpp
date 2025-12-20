@@ -26,18 +26,15 @@ using namespace dlr2d;
  * \param[in] niomtst       # Matsubara freqs per dim in test grid
  * \param[in] nbos_tst      # bosonic Matsubara freqs in test grid for
  * polarization
- * \param[in] reduced       Use reduced fine Matsubara freq grid
+ * \param[in] compressgrid  Overcomplete or compressed DLR grid
  * \param[in] compressbasis Overcomplete or compressed DLR basis
- * \param[in] niom_dense    # Matsubara freqs in fine grid (only used if
- * reduced=false)
  *
  * \return Vector containing problem parameters and errors, for analysis and
  * plotting
  */
 nda::vector<double> siam_allfuncs(double beta, double u, double lambda,
                                   double eps, int niomtst, int nbos_tst,
-                                  bool reduced, bool compressbasis,
-                                  int niom_dense = 0);
+                                  bool compressgrid, bool compressbasis);
 
 /*!
  * \brief Driver function for single-impurity Anderson model example, all
@@ -64,4 +61,5 @@ nda::vector<double> siam_allfuncs(double beta, double u, double lambda,
  * \return Vector containing problem parameters and errors, for analysis and
  * plotting
  */
-nda::vector<double> siam_allfuncs_3term(double beta, double u, double lambda, double eps, int niomtst, int nbos_tst);
+nda::vector<double> siam_allfuncs_3term(double beta, double u, double lambda,
+                                        double eps, int niomtst, int nbos_tst);
