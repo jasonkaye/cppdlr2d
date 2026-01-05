@@ -4,6 +4,13 @@
 
 namespace dlr2d {
 
+nda::array<int, 2> get_dlr2d_if_ph(nda::array_const_view<int, 2> dlr2d_if) {
+  auto dlr2d_if_ph = nda::array<int, 2>(dlr2d_if.shape());
+  dlr2d_if_ph(_, 0) = -dlr2d_if(_, 0) - 1;
+  dlr2d_if_ph(_, 1) = dlr2d_if(_, 1);
+  return dlr2d_if_ph;
+}
+
 std::string get_filename(double lambda, double eps, int niom_dense) {
 
   std::ostringstream filenameStream;

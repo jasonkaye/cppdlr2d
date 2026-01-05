@@ -20,17 +20,16 @@ void hubatom_test_driver(double beta, double u, double lambda, double eps,
   fmt::print("\nTime: {}\n\n",
              std::chrono::duration<double>(end - start).count());
 
+  // Get DLR nodes for particle-hole channel
+  auto dlr2d_if_ph = get_dlr2d_if_ph(dlr2d_if);
+
   // Get DLR frequencies
   auto dlr_rf = build_dlr_rf(lambda, eps);
   int r = dlr_rf.size(); // # DLR basis functions
 
-  // Get DLR nodes for particle-hole channel
-  auto dlr2d_if_ph = nda::array<int, 2>(dlr2d_if.shape());
-  dlr2d_if_ph(_, 0) = -dlr2d_if(_, 0) - 1;
-  dlr2d_if_ph(_, 1) = dlr2d_if(_, 1);
-
-  auto kmat = build_cf2if(beta, dlr_rf, dlr2d_if, dlr2d_rf);
-  fmt::print("System matrix size = {} x {}\n\n", kmat.shape(0), kmat.shape(1));
+  // Build kernel matrix
+  auto cf2if = build_cf2if(beta, dlr_rf, dlr2d_if, dlr2d_rf);
+  fmt::print("System matrix size = {} x {}\n\n", cf2if.shape(0), cf2if.shape(1));
 
   int niom = dlr2d_if.shape(0);
 
@@ -75,7 +74,7 @@ void hubatom_test_driver(double beta, double u, double lambda, double eps,
   auto valsall = fmatrix(niom, 2);
   valsall(_, 0) = chi_s;
   valsall(_, 1) = lam_m;
-  auto [coefsall, coefsingall] = vals2coefs_many(r, kmat, valsall, dlr2d_rf);
+  auto [coefsall, coefsingall] = vals2coefs_many(r, cf2if, valsall, dlr2d_rf);
   auto chi_s_c = coefsall(0, _, _, _);
   auto lam_m_c = coefsall(1, _, _, _);
   auto chi_s_csing = coefsingall(0, _);

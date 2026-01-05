@@ -24,9 +24,7 @@ nda::vector<double> siam_allfuncs(double beta, double u, double lambda,
   int niom = dlr2d_if.shape(0);
 
   // Get DLR nodes for particle-hole channel
-  auto dlr2d_if_ph = nda::array<int, 2>(dlr2d_if.shape());
-  dlr2d_if_ph(_, 0) = -dlr2d_if(_, 0) - 1;
-  dlr2d_if_ph(_, 1) = dlr2d_if(_, 1);
+  auto dlr2d_if_ph = get_dlr2d_if_ph(dlr2d_if);
 
   // Get DLR frequencies
   auto dlr_rf = build_dlr_rf(lambda, eps);
@@ -37,10 +35,10 @@ nda::vector<double> siam_allfuncs(double beta, double u, double lambda,
   fmt::print("# DLR basis functions = {}\n", r);
 
   // Build kernel matrix
-  auto kmat = build_cf2if(beta, dlr_rf, dlr2d_if, dlr2d_rf);
+  auto cf2if = build_cf2if(beta, dlr_rf, dlr2d_if, dlr2d_rf);
 
   fmt::print("DLR rank squared = {}\n", r * r);
-  fmt::print("System matrix size = {} x {}\n\n", kmat.shape(0), kmat.shape(1));
+  fmt::print("System matrix size = {} x {}\n\n", cf2if.shape(0), cf2if.shape(1));
 
   // Get fermionic and bosonic DLR grids
   auto ifops_fer = imfreq_ops(lambda, dlr_rf, Fermion);
@@ -125,7 +123,7 @@ nda::vector<double> siam_allfuncs(double beta, double u, double lambda,
   valsall(_, 4) = lam_d;
   valsall(_, 5) = lam_m;
 
-  auto [coefsall, coefsingall] = vals2coefs_many(r, kmat, valsall, dlr2d_rf);
+  auto [coefsall, coefsingall] = vals2coefs_many(r, cf2if, valsall, dlr2d_rf);
 
   auto chi_s_c = coefsall(0, _, _, _);
   auto chi_d_c = coefsall(1, _, _, _);
@@ -477,12 +475,12 @@ nda::vector<double> siam_allfuncs_3term(double beta, double u, double lambda,
   fmt::print("# DLR basis functions = {}\n", r);
 
   // Build kernel matrix
-  auto kmat = dlr2d::build_cf2if_3term(beta, dlr_rf, dlr2d_if);
+  auto cf2if = dlr2d::build_cf2if_3term(beta, dlr_rf, dlr2d_if);
   int niom = dlr2d_if.shape(0);
 
   fmt::print("Fine system matrix shape = {} x {}\n", 2 * r * r, 2 * r * r + r);
   fmt::print("DLR rank squared = {}\n", r * r);
-  fmt::print("System matrix size = {} x {}\n\n", kmat.shape(0), kmat.shape(1));
+  fmt::print("System matrix size = {} x {}\n\n", cf2if.shape(0), cf2if.shape(1));
 
   // Get fermionic and bosonic DLR grids
   auto ifops_fer = imfreq_ops(lambda, dlr_rf, Fermion);
@@ -567,7 +565,7 @@ nda::vector<double> siam_allfuncs_3term(double beta, double u, double lambda,
   valsall(_, 4) = lam_d;
   valsall(_, 5) = lam_m;
 
-  auto [coefsall, coefsingall] = vals2coefs_if_many_3term(kmat, valsall, r);
+  auto [coefsall, coefsingall] = vals2coefs_if_many_3term(cf2if, valsall, r);
 
   auto chi_s_c = coefsall(0, _, _, _);
   auto chi_d_c = coefsall(1, _, _, _);

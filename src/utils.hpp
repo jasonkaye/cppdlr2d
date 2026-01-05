@@ -8,6 +8,17 @@
 
 namespace dlr2d {
 
+/**
+ * @brief Compute the DLR nodes for the particle-hole channel.
+ *
+ * Given a 2D DLR index array for the particle-particle channel, returns the corresponding
+ * 2D DLR index array for the particle-hole channel.
+ *
+ * @param dlr2d_if 2D DLR indices
+ * @return Particle-hole channel DLR indices
+ */
+nda::array<int, 2> get_dlr2d_if_ph(nda::array_const_view<int, 2> dlr2d_if);
+
 using namespace cppdlr;
 using std::numbers::pi;
 
