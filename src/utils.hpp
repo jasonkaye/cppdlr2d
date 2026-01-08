@@ -3,16 +3,40 @@
 #include "nda/nda.hpp"
 
 #include <numbers>
-#include <optional>
 #include <string>
 
 namespace dlr2d {
 
+using dcomplex = std::complex<double>;
+
+/**
+ * @brief Compute the l2 norm of a 2D complex array, normalized by beta^2.
+ * @param arr Complex, 2D array
+ * @param beta Inverse temperature normalization
+ * @return l2 norm (double)
+ */
+template <nda::ArrayOfRank<2> A>
+  requires std::is_same_v<std::complex<double>, nda::get_value_t<A>>
+double l2_norm(const A &arr, double beta) {
+  return sqrt(sum(pow(abs(arr), 2))) / (beta * beta);
+}
+
+/**
+ * @brief Compute the linf norm (max abs) of a 2D complex array.
+ * @param arr Complex, 2D array
+ * @return linf norm (double)
+ */
+template <nda::ArrayOfRank<2> A>
+  requires std::is_same_v<std::complex<double>, nda::get_value_t<A>>
+double linf_norm(const A &arr) {
+  return max_element(abs(arr));
+}
+
 /**
  * @brief Compute the DLR nodes for the particle-hole channel.
  *
- * Given a 2D DLR index array for the particle-particle channel, returns the corresponding
- * 2D DLR index array for the particle-hole channel.
+ * Given a 2D DLR index array for the particle-particle channel, returns the
+ * corresponding 2D DLR index array for the particle-hole channel.
  *
  * @param dlr2d_if 2D DLR indices
  * @return Particle-hole channel DLR indices

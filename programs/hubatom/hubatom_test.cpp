@@ -116,32 +116,20 @@ void hubatom_test_driver(double beta, double u, double lambda, double eps,
   fmt::print("Time: {}\n\n",
              std::chrono::duration<double>(end - start).count());
 
-  double chi_s_l2 = sqrt(sum(pow(abs(chi_s_tru), 2))) / beta / beta;
-  double chi_s_linf = max_element(abs(chi_s_tru));
-  double chi_s_l2err =
-      sqrt(sum(pow(abs(chi_s_tru - chi_s_tst), 2))) / beta / beta;
-  double chi_s_linferr = max_element(abs(chi_s_tru - chi_s_tst));
-
-  double lam_m_l2 = sqrt(sum(pow(abs(lam_m_tru), 2))) / beta / beta;
-  double lam_m_linf = max_element(abs(lam_m_tru));
-  double lam_m_l2err =
-      sqrt(sum(pow(abs(lam_m_tru - lam_m_tst), 2))) / beta / beta;
-  double lam_m_linferr = max_element(abs(lam_m_tru - lam_m_tst));
-
   fmt::print("--- chi_s results ---\n");
-  fmt::print("L2 norm:    {}\n", chi_s_l2);
-  fmt::print("Linf norm:  {}\n", chi_s_linf);
-  fmt::print("L2 error:   {}\n", chi_s_l2err);
-  fmt::print("Linf error: {}\n\n", chi_s_linferr);
+  fmt::print("L2 norm:    {}\n", l2_norm(chi_s_tru, beta));
+  fmt::print("Linf norm:  {}\n", linf_norm(chi_s_tru));
+  fmt::print("L2 error:   {}\n", l2_norm(chi_s_tru - chi_s_tst, beta));
+  fmt::print("Linf error: {}\n\n", linf_norm(chi_s_tru - chi_s_tst));
 
   fmt::print("--- lambda_M results ---\n");
-  fmt::print("L2 norm:    {}\n", lam_m_l2);
-  fmt::print("Linf norm:  {}\n", lam_m_linf);
-  fmt::print("L2 error:   {}\n", lam_m_l2err);
-  fmt::print("Linf error: {}\n\n", lam_m_linferr);
+  fmt::print("L2 norm:    {}\n", l2_norm(lam_m_tru, beta));
+  fmt::print("Linf norm:  {}\n", linf_norm(lam_m_tru));
+  fmt::print("L2 error:   {}\n", l2_norm(lam_m_tru - lam_m_tst, beta));
+  fmt::print("Linf error: {}\n\n", linf_norm(lam_m_tru - lam_m_tst));
 
-  EXPECT_LT(chi_s_l2err, tol);
-  EXPECT_LT(lam_m_l2err, tol);
+  EXPECT_LT(l2_norm(chi_s_tru - chi_s_tst, beta), tol);
+  EXPECT_LT(l2_norm(lam_m_tru - lam_m_tst, beta), tol);
 
   // Compute polarization from DLR expansions
   auto itops = imtime_ops(lambda, dlr_rf);

@@ -157,75 +157,43 @@ nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
   fmt::print("Time: {}\n\n",
              std::chrono::duration<double>(end - start).count());
 
-  double chi_s_l2 = sqrt(sum(pow(abs(chi_s_tru), 2))) / beta / beta;
-  double chi_d_l2 = sqrt(sum(pow(abs(chi_d_tru), 2))) / beta / beta;
-  double chi_m_l2 = sqrt(sum(pow(abs(chi_m_tru), 2))) / beta / beta;
-  double lam_s_l2 = sqrt(sum(pow(abs(lam_s_tru), 2))) / beta / beta;
-  double lam_d_l2 = sqrt(sum(pow(abs(lam_d_tru), 2))) / beta / beta;
-  double lam_m_l2 = sqrt(sum(pow(abs(lam_m_tru), 2))) / beta / beta;
-
-  double chi_s_linf = max_element(abs(chi_s_tru));
-  double chi_d_linf = max_element(abs(chi_d_tru));
-  double chi_m_linf = max_element(abs(chi_m_tru));
-  double lam_s_linf = max_element(abs(lam_s_tru));
-  double lam_d_linf = max_element(abs(lam_d_tru));
-  double lam_m_linf = max_element(abs(lam_m_tru));
-
-  double chi_s_l2err =
-      sqrt(sum(pow(abs(chi_s_tru - chi_s_tst), 2))) / beta / beta;
-  double chi_d_l2err =
-      sqrt(sum(pow(abs(chi_d_tru - chi_d_tst), 2))) / beta / beta;
-  double chi_m_l2err =
-      sqrt(sum(pow(abs(chi_m_tru - chi_m_tst), 2))) / beta / beta;
-  double lam_s_l2err =
-      sqrt(sum(pow(abs(lam_s_tru - lam_s_tst), 2))) / beta / beta;
-  double lam_d_l2err =
-      sqrt(sum(pow(abs(lam_d_tru - lam_d_tst), 2))) / beta / beta;
-  double lam_m_l2err =
-      sqrt(sum(pow(abs(lam_m_tru - lam_m_tst), 2))) / beta / beta;
-
-  double chi_s_linferr = max_element(abs(chi_s_tru - chi_s_tst));
-  double chi_d_linferr = max_element(abs(chi_d_tru - chi_d_tst));
-  double chi_m_linferr = max_element(abs(chi_m_tru - chi_m_tst));
-  double lam_s_linferr = max_element(abs(lam_s_tru - lam_s_tst));
-  double lam_d_linferr = max_element(abs(lam_d_tru - lam_d_tst));
-  double lam_m_linferr = max_element(abs(lam_m_tru - lam_m_tst));
+  // Print norms and errors using l2_norm and linf_norm directly
 
   fmt::print("--- chi_S results ---\n");
-  fmt::print("L2 norm:    {}\n", chi_s_l2);
-  fmt::print("Linf norm:  {}\n", chi_s_linf);
-  fmt::print("L2 error:   {}\n", chi_s_l2err);
-  fmt::print("Linf error: {}\n\n", chi_s_linferr);
+  fmt::print("L2 norm:    {}\n", l2_norm(chi_s_tru, beta));
+  fmt::print("Linf norm:  {}\n", linf_norm(chi_s_tru));
+  fmt::print("L2 error:   {}\n", l2_norm(chi_s_tru - chi_s_tst, beta));
+  fmt::print("Linf error: {}\n\n", linf_norm(chi_s_tru - chi_s_tst));
 
   fmt::print("--- chi_D results ---\n");
-  fmt::print("L2 norm:    {}\n", chi_d_l2);
-  fmt::print("Linf norm:  {}\n", chi_d_linf);
-  fmt::print("L2 error:   {}\n", chi_d_l2err);
-  fmt::print("Linf error: {}\n\n", chi_d_linferr);
+  fmt::print("L2 norm:    {}\n", l2_norm(chi_d_tru, beta));
+  fmt::print("Linf norm:  {}\n", linf_norm(chi_d_tru));
+  fmt::print("L2 error:   {}\n", l2_norm(chi_d_tru - chi_d_tst, beta));
+  fmt::print("Linf error: {}\n\n", linf_norm(chi_d_tru - chi_d_tst));
 
   fmt::print("--- chi_M results ---\n");
-  fmt::print("L2 norm:    {}\n", chi_m_l2);
-  fmt::print("Linf norm:  {}\n", chi_m_linf);
-  fmt::print("L2 error:   {}\n", chi_m_l2err);
-  fmt::print("Linf error: {}\n\n", chi_m_linferr);
+  fmt::print("L2 norm:    {}\n", l2_norm(chi_m_tru, beta));
+  fmt::print("Linf norm:  {}\n", linf_norm(chi_m_tru));
+  fmt::print("L2 error:   {}\n", l2_norm(chi_m_tru - chi_m_tst, beta));
+  fmt::print("Linf error: {}\n\n", linf_norm(chi_m_tru - chi_m_tst));
 
   fmt::print("--- lambda_S results ---\n");
-  fmt::print("L2 norm:    {}\n", lam_s_l2);
-  fmt::print("Linf norm:  {}\n", lam_s_linf);
-  fmt::print("L2 error:   {}\n", lam_s_l2err);
-  fmt::print("Linf error: {}\n\n", lam_s_linferr);
+  fmt::print("L2 norm:    {}\n", l2_norm(lam_s_tru, beta));
+  fmt::print("Linf norm:  {}\n", linf_norm(lam_s_tru));
+  fmt::print("L2 error:   {}\n", l2_norm(lam_s_tru - lam_s_tst, beta));
+  fmt::print("Linf error: {}\n\n", linf_norm(lam_s_tru - lam_s_tst));
 
   fmt::print("--- lambda_D results ---\n");
-  fmt::print("L2 norm:    {}\n", lam_d_l2);
-  fmt::print("Linf norm:  {}\n", lam_d_linf);
-  fmt::print("L2 error:   {}\n", lam_d_l2err);
-  fmt::print("Linf error: {}\n\n", lam_d_linferr);
+  fmt::print("L2 norm:    {}\n", l2_norm(lam_d_tru, beta));
+  fmt::print("Linf norm:  {}\n", linf_norm(lam_d_tru));
+  fmt::print("L2 error:   {}\n", l2_norm(lam_d_tru - lam_d_tst, beta));
+  fmt::print("Linf error: {}\n\n", linf_norm(lam_d_tru - lam_d_tst));
 
   fmt::print("--- lambda_M results ---\n");
-  fmt::print("L2 norm:    {}\n", lam_m_l2);
-  fmt::print("Linf norm:  {}\n", lam_m_linf);
-  fmt::print("L2 error:   {}\n", lam_m_l2err);
-  fmt::print("Linf error: {}\n\n", lam_m_linferr);
+  fmt::print("L2 norm:    {}\n", l2_norm(lam_m_tru, beta));
+  fmt::print("Linf norm:  {}\n", linf_norm(lam_m_tru));
+  fmt::print("L2 error:   {}\n", l2_norm(lam_m_tru - lam_m_tst, beta));
+  fmt::print("Linf error: {}\n\n", linf_norm(lam_m_tru - lam_m_tst));
 
   // Compute polarization from DLR expansions
   auto itops = imtime_ops(lambda, dlr_rf);
@@ -329,30 +297,30 @@ nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
   results(3) = eps;
   results(4) = r;
   results(5) = niom;
-  results(6) = chi_s_l2;
-  results(7) = chi_s_linf;
-  results(8) = chi_s_l2err;
-  results(9) = chi_s_linferr;
-  results(10) = chi_d_l2;
-  results(11) = chi_d_linf;
-  results(12) = chi_d_l2err;
-  results(13) = chi_d_linferr;
-  results(14) = chi_m_l2;
-  results(15) = chi_m_linf;
-  results(16) = chi_m_l2err;
-  results(17) = chi_m_linferr;
-  results(18) = lam_s_l2;
-  results(19) = lam_s_linf;
-  results(20) = lam_s_l2err;
-  results(21) = lam_s_linferr;
-  results(22) = lam_d_l2;
-  results(23) = lam_d_linf;
-  results(24) = lam_d_l2err;
-  results(25) = lam_d_linferr;
-  results(26) = lam_m_l2;
-  results(27) = lam_m_linf;
-  results(28) = lam_m_l2err;
-  results(29) = lam_m_linferr;
+  results(6) = l2_norm(chi_s_tru, beta);
+  results(7) = linf_norm(chi_s_tru);
+  results(8) = l2_norm(chi_s_tru - chi_s_tst, beta);
+  results(9) = linf_norm(chi_s_tru - chi_s_tst);
+  results(10) = l2_norm(chi_d_tru, beta);
+  results(11) = linf_norm(chi_d_tru);
+  results(12) = l2_norm(chi_d_tru - chi_d_tst, beta);
+  results(13) = linf_norm(chi_d_tru - chi_d_tst);
+  results(14) = l2_norm(chi_m_tru, beta);
+  results(15) = linf_norm(chi_m_tru);
+  results(16) = l2_norm(chi_m_tru - chi_m_tst, beta);
+  results(17) = linf_norm(chi_m_tru - chi_m_tst);
+  results(18) = l2_norm(lam_s_tru, beta);
+  results(19) = linf_norm(lam_s_tru);
+  results(20) = l2_norm(lam_s_tru - lam_s_tst, beta);
+  results(21) = linf_norm(lam_s_tru - lam_s_tst);
+  results(22) = l2_norm(lam_d_tru, beta);
+  results(23) = linf_norm(lam_d_tru);
+  results(24) = l2_norm(lam_d_tru - lam_d_tst, beta);
+  results(25) = linf_norm(lam_d_tru - lam_d_tst);
+  results(26) = l2_norm(lam_m_tru, beta);
+  results(27) = linf_norm(lam_m_tru);
+  results(28) = l2_norm(lam_m_tru - lam_m_tst, beta);
+  results(29) = linf_norm(lam_m_tru - lam_m_tst);
   results(30) = pol_s_l2;
   results(31) = pol_s_linf;
   results(32) = pol_s_l2err;
