@@ -11,3 +11,4 @@ endforeach(source_file)
 
 add_subdirectory(hubatom)
 add_subdirectory(siam)
+add_subdirectory(hubatom_mc)
