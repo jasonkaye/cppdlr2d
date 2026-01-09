@@ -167,7 +167,7 @@ load_chi_data(const std::string &datafile) {
                            1i * chi_ph_rawdata[i](_, _, 0, 0, 0, 0, 1);
   }
 
-  auto chi_s_data = chi_pp_data(1, _, _) - chi_pp_data(2, _, _);
+  auto chi_s_data = 2 * chi_pp_data(1, _, _);
   auto chi_d_data = chi_ph_data(0, _, _) + chi_ph_data(1, _, _);
   auto chi_m_data = chi_ph_data(0, _, _) - chi_ph_data(1, _, _);
 
