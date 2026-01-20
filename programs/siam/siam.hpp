@@ -3,8 +3,7 @@
  *\brief Header file for single-impurity Anderson model example
  */
 
-#include "../../src/dlr2d.hpp"
-#include "../../src/polarization.hpp"
+#include <cppdlr2d/cppdlr2d.hpp>
 
 using namespace dlr2d;
 

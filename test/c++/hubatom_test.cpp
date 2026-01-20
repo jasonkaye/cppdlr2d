@@ -1,4 +1,5 @@
-#include "hubatom.hpp"
+// Test implementation sources are included in the build from programs/hubatom/
+#include "../../programs/hubatom/hubatom.hpp"
 #include <chrono>
 #include <fmt/format.h>
 #include <gtest/gtest.h>

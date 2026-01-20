@@ -1,5 +1,4 @@
-#include "../src/dlr2d.hpp"
-#include "../src/utils.hpp"
+#include <cppdlr2d/cppdlr2d.hpp>
 #include "nda/lapack/geqp3.hpp"
 #include "nda/layout/policies.hpp"
 #include <cppdlr/cppdlr.hpp>

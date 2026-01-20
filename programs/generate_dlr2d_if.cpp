@@ -1,5 +1,4 @@
-#include "../src/dlr2d.hpp"
-#include "../src/utils.hpp"
+#include <cppdlr2d/cppdlr2d.hpp>
 #include <chrono>
 #include <fmt/format.h>
 

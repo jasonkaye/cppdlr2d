@@ -1,1 +1,22 @@
-dlr2d_if_data
+# Build directories
+build/
+build_*/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Compiled files
+*.o
+*.a
+*.so
+*.dylib
+
+# Data files
+dlr2d_if_data/
+programs/dlr2d_if_data/
+
+# Generated
+compile_commands.json
