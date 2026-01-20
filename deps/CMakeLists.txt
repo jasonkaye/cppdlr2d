@@ -1,6 +1,13 @@
 # Include external dependency function
 include(${CMAKE_CURRENT_SOURCE_DIR}/external_dependency.cmake)
 
+# -- fmt --
+set(FMT_INSTALL ON)
+external_dependency(fmt
+  GIT_REPO https://github.com/fmtlib/fmt
+  GIT_TAG 12.0.0
+)
+
 # -- GTest (always build from source, exclude from all)
 external_dependency(GTest
   GIT_REPO https://github.com/google/googletest

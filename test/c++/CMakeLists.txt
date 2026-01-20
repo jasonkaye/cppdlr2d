@@ -29,3 +29,6 @@ foreach(test ${all_tests})
     )
   endif()
 endforeach()
+
+# FMT
+target_link_libraries(${PROJECT_NAME}_c PUBLIC fmt::fmt-header-only)
