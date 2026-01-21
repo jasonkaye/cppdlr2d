@@ -464,7 +464,7 @@ vals2coefs(int r, fmatrix cf2if, nda::vector_const_view<dcomplex> vals,
 
   auto s = nda::vector<double>(m); // Singular values (not needed)
   int rank = 0;                    // Rank (not needed)
-  nda::lapack::gelss(cf2if, tmp, s, 0.0, rank);
+  nda::lapack::gelss(cf2if, tmp, s, -1.0, rank);
 
   auto coefreg = nda::zeros<dcomplex>(3, r, r);
   auto coefsng = nda::zeros<dcomplex>(r);
@@ -494,7 +494,7 @@ vals2coefs_many(int r, fmatrix cf2if,
 
   auto s = nda::vector<double>(m); // Singular values (not needed)
   int rank = 0;                    // Rank (not needed)
-  nda::lapack::gelss(cf2if, tmp, s, 0.0, rank);
+  nda::lapack::gelss(cf2if, tmp, s, -1.0, rank);
 
   auto coefreg = nda::zeros<dcomplex>(nrhs, 3, r, r);
   auto coefsng = nda::zeros<dcomplex>(nrhs, r);
@@ -523,7 +523,7 @@ vals2coefs_if_3term(fmatrix cf2if, nda::vector_const_view<dcomplex> vals,
 
   auto s = nda::vector<double>(m); // Singular values (not needed)
   int rank = 0;                    // Rank (not needed)
-  nda::lapack::gelss(cf2if, tmp, s, 0.0, rank);
+  nda::lapack::gelss(cf2if, tmp, s, -1.0, rank);
 
   auto coefreg = nda::array<dcomplex, 3>(2, r, r);
   auto coefsng = nda::array<dcomplex, 1>(r);
@@ -546,7 +546,7 @@ vals2coefs_if_many_3term(fmatrix cf2if,
 
   auto s = nda::vector<double>(m); // Singular values (not needed)
   int rank = 0;                    // Rank (not needed)
-  nda::lapack::gelss(cf2if, tmp, s, 0.0, rank);
+  nda::lapack::gelss(cf2if, tmp, s, -1.0, rank);
 
   auto coefreg = nda::array<dcomplex, 4>(nrhs, 2, r, r);
   auto coefsng = nda::array<dcomplex, 2>(nrhs, r);
