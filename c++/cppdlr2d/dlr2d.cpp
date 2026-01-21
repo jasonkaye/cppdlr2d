@@ -129,8 +129,11 @@ build_dlr2d(double lambda, double eps, bool compressgrid, bool compressbasis) {
       dlr2d_rf(i, 1) = k;
       dlr2d_rf(i, 2) = l;
     } else {
+      // Singular term: only one real frequency index k
+      // Set l = k due to δ_{l,k} factor in the singular term
       dlr2d_rf(i, 0) = 3;
       dlr2d_rf(i, 1) = idx - 3 * r * r;
+      dlr2d_rf(i, 2) = idx - 3 * r * r;
     }
   }
 
