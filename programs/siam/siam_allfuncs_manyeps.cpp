@@ -2,7 +2,7 @@
 
 #include <fstream>
 
-using namespace dlr2d;
+using namespace cppdlr2d;
 
 int main() {
   double beta = 20;           // Inverse temperature

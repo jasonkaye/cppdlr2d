@@ -5,7 +5,7 @@
 #include <numbers>
 #include <string>
 
-namespace dlr2d {
+namespace cppdlr2d {
 
   using dcomplex = std::complex<double>;
 
@@ -182,4 +182,4 @@ namespace dlr2d {
  */
   std::tuple<int, int> ind2sub_c(int idx, int n);
 
-} // namespace dlr2d
+} // namespace cppdlr2d

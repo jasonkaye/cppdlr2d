@@ -2,7 +2,7 @@
 
 #include "utils.hpp"
 
-namespace dlr2d {
+namespace cppdlr2d {
 
   /*!
  * \brief Obtain 2D DLR "product" Matsubara frequency grid
@@ -299,4 +299,4 @@ namespace dlr2d {
   std::complex<double> coefs2eval_if_3term(double beta, nda::vector<double> dlr_rf, nda::array_const_view<dcomplex, 3> gc_reg,
                                            nda::array_const_view<dcomplex, 1> gc_sng, int m, int n, int channel);
 
-} // namespace dlr2d
+} // namespace cppdlr2d

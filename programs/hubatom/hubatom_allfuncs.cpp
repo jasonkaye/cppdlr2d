@@ -1,6 +1,6 @@
 #include "hubatom.hpp"
 
-using namespace dlr2d;
+using namespace cppdlr2d;
 
 int main() {
   double beta = 64;           // Inverse temperature

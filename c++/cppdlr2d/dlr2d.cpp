@@ -4,7 +4,7 @@
 #include <fmt/format.h>
 #include <numbers>
 
-namespace dlr2d {
+namespace cppdlr2d {
 
   using namespace cppdlr;
   using std::numbers::pi;
@@ -621,4 +621,4 @@ namespace dlr2d {
     return g;
   }
 
-} // namespace dlr2d
+} // namespace cppdlr2d

@@ -5,7 +5,7 @@
 
 #include <cppdlr2d/cppdlr2d.hpp>
 
-using namespace dlr2d;
+using namespace cppdlr2d;
 
 /*!
  * \brief Driver function for single-impurity Anderson model example, all

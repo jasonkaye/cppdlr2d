@@ -1,6 +1,6 @@
 #include "polarization.hpp"
 
-namespace dlr2d {
+namespace cppdlr2d {
 
   nda::vector<dcomplex> polarization(double beta, double lambda, double eps, cppdlr::imtime_ops const &itops, cppdlr::imfreq_ops const &ifops_fer,
                                      cppdlr::imfreq_ops const &ifops_bos, nda::array_const_view<dcomplex, 1> fc,
@@ -547,4 +547,4 @@ namespace dlr2d {
     return beta * ifops_bos.coefs2vals(fgc);
   }
 
-} // namespace dlr2d
+} // namespace cppdlr2d

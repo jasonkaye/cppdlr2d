@@ -2,7 +2,7 @@
 #include <chrono>
 #include <fmt/format.h>
 
-using namespace dlr2d;
+using namespace cppdlr2d;
 
 nda::vector<double> hubatom_allfuncs(double beta, double u, double lambda,
                                      double eps, int niomtst, int nbos_tst,
@@ -597,26 +597,20 @@ nda::vector<double> hubatom_allfuncs_3term(double beta, double u, double lambda,
   //     polarization_res(beta, ifops_fer, ifops_bos, gc, gc, lam_s_c,
   //     lam_s_csing);
   // pol_s += polarization_const(beta, itops, ifops_bos, gc, gc);
-  auto pol_s =
-      dlr2d::polarization_3term(beta, lambda, eps, itops, ifops_fer, ifops_bos,
-                                gc, gc, lam_s_c, lam_s_csing);
+  auto pol_s = cppdlr2d::polarization_3term(beta, lambda, eps, itops, ifops_fer, ifops_bos, gc, gc, lam_s_c, lam_s_csing);
   pol_s *= -1.0 / 2;
 
   // auto pol_d =
   //     polarization_res(beta, ifops_fer, ifops_bos, grc, gc, lam_d_c,
   //     lam_d_csing);
   // pol_d += polarization_const(beta, itops, ifops_bos, grc, gc);
-  auto pol_d =
-      dlr2d::polarization_3term(beta, lambda, eps, itops, ifops_fer, ifops_bos,
-                                grc, gc, lam_d_c, lam_d_csing);
+  auto pol_d = cppdlr2d::polarization_3term(beta, lambda, eps, itops, ifops_fer, ifops_bos, grc, gc, lam_d_c, lam_d_csing);
 
   // auto pol_m =
   //     polarization_res(beta, ifops_fer, ifops_bos, grc, gc, lam_m_c,
   //     lam_m_csing);
   // pol_m += polarization_const(beta, itops, ifops_bos, grc, gc);
-  auto pol_m =
-      dlr2d::polarization_3term(beta, lambda, eps, itops, ifops_fer, ifops_bos,
-                                grc, gc, lam_m_c, lam_m_csing);
+  auto pol_m = cppdlr2d::polarization_3term(beta, lambda, eps, itops, ifops_fer, ifops_bos, grc, gc, lam_m_c, lam_m_csing);
 
   auto pol_s_c = ifops_bos.vals2coefs(beta, pol_s); // DLR expansion
   auto pol_d_c = ifops_bos.vals2coefs(beta, pol_d);

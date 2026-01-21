@@ -3,7 +3,7 @@
 #include "nda/layout/policies.hpp"
 #include <cppdlr/cppdlr.hpp>
 
-using namespace dlr2d;
+using namespace cppdlr2d;
 
 int main() {
 

@@ -2,7 +2,7 @@
 #include <chrono>
 #include <fmt/format.h>
 
-using namespace dlr2d;
+using namespace cppdlr2d;
 
 /*!
  * \brief Generate 2D Matsubara frequency DLR grids for several choices of DLR

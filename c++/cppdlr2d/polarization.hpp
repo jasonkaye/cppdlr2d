@@ -2,7 +2,7 @@
 
 #include "dlr2d.hpp"
 
-namespace dlr2d {
+namespace cppdlr2d {
 
   // Compute polarization by convolution-based algorithm
   nda::vector<dcomplex> polarization(double beta, double lambda, double eps, cppdlr::imtime_ops const &itops, cppdlr::imfreq_ops const &ifops_fer,
@@ -26,4 +26,4 @@ namespace dlr2d {
   nda::vector<dcomplex> polarization_const(double beta, cppdlr::imtime_ops const &itops, cppdlr::imfreq_ops const &ifops_bos,
                                            nda::array_const_view<dcomplex, 1> fc, nda::array_const_view<dcomplex, 1> gc);
 
-} // namespace dlr2d
+} // namespace cppdlr2d

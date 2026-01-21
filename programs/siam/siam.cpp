@@ -442,7 +442,7 @@ nda::vector<double> siam_allfuncs_3term(double beta, double u, double lambda,
   fmt::print("# DLR basis functions = {}\n", r);
 
   // Build kernel matrix
-  auto cf2if = dlr2d::build_cf2if_3term(beta, dlr_rf, dlr2d_if);
+  auto cf2if = cppdlr2d::build_cf2if_3term(beta, dlr_rf, dlr2d_if);
   int niom = dlr2d_if.shape(0);
 
   fmt::print("Fine system matrix shape = {} x {}\n", 2 * r * r, 2 * r * r + r);

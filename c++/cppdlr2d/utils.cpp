@@ -2,7 +2,7 @@
 
 #include <iomanip>
 
-namespace dlr2d {
+namespace cppdlr2d {
 
   nda::array<int, 2> get_dlr2d_if_ph(nda::array_const_view<int, 2> dlr2d_if) {
     auto dlr2d_if_ph  = nda::array<int, 2>(dlr2d_if.shape());
@@ -168,4 +168,4 @@ namespace dlr2d {
     return {i, j};
   }
 
-} // namespace dlr2d
+} // namespace cppdlr2d
