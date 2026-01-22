@@ -29,6 +29,9 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} DESTINATION include FILES_MATCHING
 # Link against cppdlr (provides nda transitively)
 target_link_libraries(${PROJECT_NAME}_c PUBLIC cppdlr::cppdlr_c)
 
+# Link against fmt (for diagnostic output)
+target_link_libraries(${PROJECT_NAME}_c PRIVATE fmt::fmt)
+
 # ========= Static Analyzer Checks ==========
 
 option(ANALYZE_SOURCES OFF "Run static analyzer checks if found (clang-tidy, cppcheck)")
