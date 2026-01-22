@@ -13,5 +13,5 @@ set(implementation_sources
 foreach(main_source ${main_program_sources})
   get_filename_component(program_name ${main_source} NAME_WE)
   add_executable(${program_name} ${main_source} ${implementation_sources})
-  target_link_libraries(${program_name} PRIVATE ${PROJECT_NAME}::${PROJECT_NAME}_c)
+  target_link_libraries(${program_name} PRIVATE ${PROJECT_NAME}::${PROJECT_NAME}_c fmt::fmt)
 endforeach()
