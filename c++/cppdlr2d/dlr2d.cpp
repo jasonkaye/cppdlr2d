@@ -62,8 +62,6 @@ namespace cppdlr2d {
 
   std::tuple<nda::array<int, 2>, nda::array<int, 2>> build_dlr2d(double lambda, double eps, bool compressgrid, bool compressbasis) {
 
-    int rankmethod = 1;
-
     // Get DLR frequencies
     auto dlr_rf = build_dlr_rf(lambda, eps);
     int r       = dlr_rf.size(); // # DLR basis functions
@@ -101,7 +99,7 @@ namespace cppdlr2d {
     // Extract frequency pairs
     auto dlr2d_rf = nda::array<int, 2>(ncol, 3);
     int idx       = 0;
-    double k = 0, l = 0;
+    int k = 0, l = 0;
     for (int i = 0; i < ncol; ++i) {
       idx = rf_idx(i);
       if (idx < r * r) {
@@ -152,9 +150,9 @@ namespace cppdlr2d {
 
     // Extract imaginary frequency pairs from pivots
     dlr2d_if = nda::array<int, 2>(nrow, 2);
-    for (int k = 0; k < nrow; ++k) {
-      dlr2d_if(k, 0) = prod_if(if_idx(k), 0);
-      dlr2d_if(k, 1) = prod_if(if_idx(k), 1);
+    for (int m = 0; m < nrow; ++m) {
+      dlr2d_if(m, 0) = prod_if(if_idx(m), 0);
+      dlr2d_if(m, 1) = prod_if(if_idx(m), 1);
     }
 
     fmt::print("Fine system matrix shape = {} x {}\n", 3 * r * r + r, 3 * r * r + r);
@@ -207,8 +205,6 @@ namespace cppdlr2d {
       }
     }
 
-    auto nu2d = (2 * nu2didx + 1) * pi * 1i;
-
     // Get system matrix for dense grid
     auto kmat = fmatrix(2 * r * r, 2 * r * r + r);
 
@@ -257,7 +253,6 @@ namespace cppdlr2d {
 
     // Pivoted QR to determine sampling nodes
     auto kmatt = fmatrix(transpose(kmat));
-    auto start = std::chrono::high_resolution_clock::now();
     auto piv   = nda::zeros<int>(2 * r * r);
     auto tau   = nda::vector<dcomplex>(2 * r * r);
     nda::lapack::geqp3(kmatt, piv, tau);
@@ -342,7 +337,6 @@ namespace cppdlr2d {
 
   fmatrix build_cf2if(double beta, nda::vector_const_view<double> dlr_rf, nda::array_const_view<int, 2> dlr2d_if,
                       nda::array_const_view<int, 2> dlr2d_rf) {
-    int r    = dlr_rf.size();
     int n_if = dlr2d_if.shape(0);
     int n_rf = dlr2d_rf.shape(0);
 
@@ -427,7 +421,6 @@ namespace cppdlr2d {
     auto coefreg = nda::zeros<dcomplex>(3, r, r);
     auto coefsng = nda::zeros<dcomplex>(r);
 
-    int idx = 0, j = 0, k = 0, l = 0;
     for (int i = 0; i < n; ++i) {
       if (dlr2d_rf(i, 0) < 3) { // Regular part
         coefreg(dlr2d_rf(i, 0), dlr2d_rf(i, 1), dlr2d_rf(i, 2)) = tmp(i);

@@ -2,7 +2,7 @@
 
 namespace cppdlr2d {
 
-  nda::vector<dcomplex> polarization(double beta, double lambda, double eps, cppdlr::imtime_ops const &itops, cppdlr::imfreq_ops const &ifops_fer,
+  nda::vector<dcomplex> polarization(double beta, double lambda, double eps, cppdlr::imtime_ops const & /*itops*/, cppdlr::imfreq_ops const &ifops_fer,
                                      cppdlr::imfreq_ops const &ifops_bos, nda::array_const_view<dcomplex, 1> fc,
                                      nda::array_const_view<dcomplex, 1> gc, nda::array_const_view<dcomplex, 3> lambc,
                                      nda::array_const_view<dcomplex, 1> lambc_sing) {
@@ -31,17 +31,11 @@ namespace cppdlr2d {
 
     // Compute 1/(i Omega_m - omega_k)
     auto kkif = nda::array<dcomplex, 2>(r, r);
-    auto iom  = 2 * dlr_if_bos * pi * 1i;
     for (int j = 0; j < r; ++j) {
-      for (int k = 0; k < r; ++k) {
-        // kkif(j, k) = beta / (iom(j) - dlr_rf(k));
-        kkif(j, k) = beta * k_if_boson(dlr_if_bos(j), dlr_rf(k));
-      }
+      for (int k = 0; k < r; ++k) { kkif(j, k) = beta * k_if_boson(dlr_if_bos(j), dlr_rf(k)); }
     }
 
     // Compute F(tau) and G(tau)
-    // auto fit = itops.coefs2vals(fc);
-    // auto git = itops.coefs2vals(gc);
     auto fit = matvecmul(cf2itfine, fc);
     auto git = matvecmul(cf2itfine, gc);
 
@@ -105,11 +99,9 @@ namespace cppdlr2d {
     auto tmp5 = matvecmul(tmp2, lambc_sing);
     auto tmp6 = cffine2if * itops2.vals2coefs(tmp5);
 
-    int m0idx = 0;
     for (int j = 0; j < r; ++j) {
       if (dlr_if_bos(j) == 0) {
         pol(j) += beta * beta * tmp6(j);
-        m0idx = j;
         break;
       }
     }
@@ -122,7 +114,7 @@ namespace cppdlr2d {
     return pol;
   }
 
-  nda::vector<dcomplex> polarization_3term(double beta, double lambda, double eps, cppdlr::imtime_ops const &itops,
+  nda::vector<dcomplex> polarization_3term(double beta, double lambda, double eps, cppdlr::imtime_ops const & /*itops*/,
                                            cppdlr::imfreq_ops const &ifops_fer, cppdlr::imfreq_ops const &ifops_bos,
                                            nda::array_const_view<dcomplex, 1> fc, nda::array_const_view<dcomplex, 1> gc,
                                            nda::array_const_view<dcomplex, 3> lambc, nda::array_const_view<dcomplex, 1> lambc_sing) {
@@ -151,17 +143,11 @@ namespace cppdlr2d {
 
     // Compute 1/(i Omega_m - omega_k)
     auto kkif = nda::array<dcomplex, 2>(r, r);
-    auto iom  = 2 * dlr_if_bos * pi * 1i;
     for (int j = 0; j < r; ++j) {
-      for (int k = 0; k < r; ++k) {
-        // kkif(j, k) = beta / (iom(j) - dlr_rf(k));
-        kkif(j, k) = beta * k_if_boson(dlr_if_bos(j), dlr_rf(k));
-      }
+      for (int k = 0; k < r; ++k) { kkif(j, k) = beta * k_if_boson(dlr_if_bos(j), dlr_rf(k)); }
     }
 
     // Compute F(tau) and G(tau)
-    // auto fit = itops.coefs2vals(fc);
-    // auto git = itops.coefs2vals(gc);
     auto fit = matvecmul(cf2itfine, fc);
     auto git = matvecmul(cf2itfine, gc);
 
@@ -215,11 +201,9 @@ namespace cppdlr2d {
     auto tmp5 = matvecmul(tmp2, lambc_sing);
     auto tmp6 = cffine2if * itops2.vals2coefs(tmp5);
 
-    int m0idx = 0;
     for (int j = 0; j < r; ++j) {
       if (dlr_if_bos(j) == 0) {
         pol(j) += beta * beta * tmp6(j);
-        m0idx = j;
         break;
       }
     }
@@ -243,7 +227,6 @@ namespace cppdlr2d {
     auto dlr_if_fer = ifops_fer.get_ifnodes();
     auto dlr_if_bos = ifops_bos.get_ifnodes();
 
-    auto nu_dlr = ((2 * dlr_if_fer + 1) * pi * 1i) / beta;
     auto om_dlr = (2 * dlr_if_bos * pi * 1i) / beta;
 
     // Prepare some objects
@@ -507,9 +490,8 @@ namespace cppdlr2d {
 
     // Evaluate summand at fermionic DLR imag freq nodes
 
-    auto h                  = nda::vector<dcomplex>(r);
-    std::complex<double> nu = 0;
-    int channel             = 1;
+    auto h      = nda::vector<dcomplex>(r);
+    int channel = 1;
     for (int k = 0; k < r; ++k) {
       // h(k) = hubbg(u, nu1) * hubbg(u, -nu1) * hubbvert(u, beta, nu1, -nu1);
       h(k) = ifops_fer.coefs2eval(beta, fc, dlr_if_fer(k)) * ifops_fer.coefs2eval(beta, gc, -dlr_if_fer(k) - 1)
@@ -524,12 +506,8 @@ namespace cppdlr2d {
     for (int k = 0; k < r; ++k) { pol0 += hc(k) * k_it(0.0, ej(k), beta); }
 
     // Fill in polarization at i omega_n = 0
-    int m0idx = 0;
     for (int m = 0; m < r; ++m) {
-      if (dlr_if_bos(m) == 0) {
-        m0idx  = m;
-        pol(m) = pol0;
-      }
+      if (dlr_if_bos(m) == 0) { pol(m) = pol0; }
     }
 
     return pol;

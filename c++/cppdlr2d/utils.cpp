@@ -70,7 +70,7 @@ namespace cppdlr2d {
       }
     } else if (method == 3) {
 
-      if (!alpha || !nvec) { throw std::invalid_argument("alpha and nvec must be provided for method 3"); }
+      if (alpha == 0 || nvec == 0) { throw std::invalid_argument("alpha and nvec must be provided for method 3"); }
 
       // Set up random number generator
       std::random_device rd;
@@ -116,7 +116,6 @@ namespace cppdlr2d {
       for (int i = 0; i < n; ++i) { ynorm(i, 0) = max_element(ynorm(i, _)); }
 
       // Estimate rank
-      int rank     = 0;
       double epssc = eps / (alpha * sqrt(2 / pi));
       for (int i = 0; i < n - 1; ++i) {
         if (ynorm(i + 1, 0) < epssc * epssc) {
