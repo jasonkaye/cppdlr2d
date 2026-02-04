@@ -276,6 +276,32 @@ namespace cppdlr2d {
                                      nda::array_const_view<dcomplex, 1> gc_sng, int m, int n, int channel);
 
   /*!
+ * \brief Evaluate a 2D DLR expansion at multiple fermionic/fermionic Matsubara
+ * frequency points
+ *
+ * This function evaluates a 2D DLR expansion at a collection of Matsubara
+ * frequency points specified by arrays of indices.
+ *
+ * \param[in] beta    Inverse temperature
+ * \param[in] dlr_rf  1D DLR real frequencies
+ * \param[in] gc_reg  2D DLR regular expansion coefficients (3 x r x r array)
+ * \param[in] gc_sng  1D DLR singular expansion coefficients (r-length vector)
+ * \param[in] m       Array of first indices of Matsubara frequency points
+ * \param[in] n       Array of second indices of Matsubara frequency points
+ * \param[in] channel Channel index (=1 for particle-particle, =2 for
+ * particle-hole)
+ *
+ * \return Array of complex values at the specified points
+ *
+ * \note For a fermionic Matsubara frequency i*nu_n = (2n+1)*pi/beta, we refer
+ * to n as its index. The i-th element of the output corresponds to the 2D
+ * Matsubara frequency point (i nu_{m(i)}, i nu_{n(i)}).
+ */
+  nda::vector<dcomplex> coefs2eval_if(double beta, nda::vector<double> dlr_rf, nda::array_const_view<dcomplex, 3> gc_reg,
+                                      nda::array_const_view<dcomplex, 1> gc_sng, nda::vector_const_view<int> m,
+                                      nda::vector_const_view<int> n, int channel);
+
+  /*!
  * \brief Evaluate a 2D DLR expansion at a given fermionic/fermionic Matsubara
  * frequency point, using three-term DLR
  *

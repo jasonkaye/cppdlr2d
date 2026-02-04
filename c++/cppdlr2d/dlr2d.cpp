@@ -571,6 +571,63 @@ namespace cppdlr2d {
     return g;
   }
 
+  // Evaluate 2D DLR expansion at multiple points
+  // Channel = 1 for particle-particle, = 2 for particle-hole
+  nda::vector<dcomplex> coefs2eval_if(double beta, nda::vector<double> dlr_rf, nda::array_const_view<dcomplex, 3> gc_reg,
+                                      nda::array_const_view<dcomplex, 1> gc_sng, nda::vector_const_view<int> m,
+                                      nda::vector_const_view<int> n, int channel) {
+
+    int r    = dlr_rf.size(); // # DLR basis functions
+    int npts = m.size();      // # points to evaluate
+
+    // Make sure coefficient array is 3xrxr
+    if (gc_reg.shape(0) != 3) throw std::runtime_error("First dim of coefficient array must be 3.");
+    if ((gc_reg.shape(1) != r) || (gc_reg.shape(2) != r))
+      throw std::runtime_error(
+         "Second and third dims of coefficient array must "
+         "be # DLR basis functions r.");
+
+    // Make sure m and n have the same size
+    if (n.size() != npts) throw std::runtime_error("m and n must have the same size.");
+
+    // Transform m indices for particle-hole channel
+    auto mm = nda::vector<int>(npts);
+    if (channel == 1) { // Particle-particle channel
+      mm = m;
+    } else if (channel == 2) { // Particle-hole channel
+      mm = -m - 1;
+    } else {
+      throw std::runtime_error("Invalid channel for coefs2eval_if.");
+    }
+
+    // Build kernel matrices
+    auto kfm = nda::array<dcomplex, 2>(npts, r);
+    auto kfn = nda::array<dcomplex, 2>(npts, r);
+    auto kb  = nda::array<dcomplex, 2>(npts, r);
+    for (int i = 0; i < npts; ++i) {
+      for (int k = 0; k < r; ++k) {
+        kfm(i, k) = k_if(mm(i), dlr_rf(k), Fermion);
+        kfn(i, k) = k_if(n(i), dlr_rf(k), Fermion);
+        kb(i, k)  = k_if_boson(mm(i) + n(i) + 1, dlr_rf(k));
+      }
+    }
+
+    // Evaluate DLR expansion at all points
+    auto tmp1 = hadamard(matmul(kfm, gc_reg(0, _, _)), kfn);
+    auto tmp2 = hadamard(matmul(kfn, gc_reg(1, _, _)), kb);
+    auto tmp3 = hadamard(matmul(kfm, gc_reg(2, _, _)), kb);
+
+    auto g = nda::vector<dcomplex>(npts);
+    for (int i = 0; i < npts; ++i) {
+      g(i) = (beta * beta) * sum(tmp1(i, _) + tmp2(i, _) + tmp3(i, _));
+
+      // Add singular contribution if mm + n + 1 == 0
+      if (mm(i) + n(i) + 1 == 0) { g(i) += (beta * beta) * nda::blas::dot(gc_sng, kfm(i, _)); }
+    }
+
+    return g;
+  }
+
   // Evaluate 2D DLR expansion with two terms
   // Channel = 1 for particle-particle, = 2 for particle-hole
   std::complex<double> coefs2eval_if_3term(double beta, nda::vector<double> dlr_rf, nda::array_const_view<dcomplex, 3> gc_reg,

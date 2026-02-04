@@ -1,6 +1,7 @@
 # List of all tests
 set(all_tests
   hubatom_test.cpp
+  coefs2eval_if_test.cpp
 )
 
 foreach(test ${all_tests})
