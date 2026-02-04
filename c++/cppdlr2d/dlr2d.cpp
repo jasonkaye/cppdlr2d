@@ -576,8 +576,8 @@ namespace cppdlr2d {
   // Evaluate 2D DLR expansion at multiple points
   // Channel = 1 for particle-particle, = 2 for particle-hole
   nda::vector<dcomplex> coefs2eval_if(double beta, nda::vector<double> dlr_rf, nda::array_const_view<dcomplex, 3> gc_reg,
-                                      nda::array_const_view<dcomplex, 1> gc_sng, nda::vector_const_view<int> m,
-                                      nda::vector_const_view<int> n, int channel) {
+                                      nda::array_const_view<dcomplex, 1> gc_sng, nda::vector_const_view<int> m, nda::vector_const_view<int> n,
+                                      int channel) {
 
     int r    = dlr_rf.size(); // # DLR basis functions
     int npts = m.size();      // # points to evaluate
@@ -671,10 +671,6 @@ namespace cppdlr2d {
       }
     }
 
-    // Precompute singular mask
-    auto sng_mask = nda::vector<bool>(npts);
-    for (int i = 0; i < npts; ++i) { sng_mask(i) = (mm(i) + n(i) + 1 == 0); }
-
     // === DIMENSION MERGING OPTIMIZATION ===
     // Extract term slices - each gc_reg(t, _, _, _) is contiguous (r, r, nbatch)
     auto gc0 = gc_reg(0, _, _, _);
@@ -697,14 +693,14 @@ namespace cppdlr2d {
     auto prod2 = reshape(prod2_flat, npts, r, nbatch);
 
     // Hadamard products and reduction
-    auto result    = nda::array<dcomplex, 2>(nbatch, npts);
+    auto result    = nda::zeros<dcomplex>(nbatch, npts);
     double beta_sq = beta * beta;
 
-    for (int j = 0; j < nbatch; ++j) {
-      for (int i = 0; i < npts; ++i) {
-        dcomplex sum_val = 0;
-        for (int l = 0; l < r; ++l) { sum_val += prod0(i, l, j) * kfn(i, l) + (prod1(i, l, j) + prod2(i, l, j)) * kb(i, l); }
-        result(j, i) = beta_sq * sum_val;
+    for (int i = 0; i < npts; ++i) {
+      for (int l = 0; l < r; ++l) {
+        auto kfn_il = kfn(i, l);
+        auto kb_il  = kb(i, l);
+        for (int j = 0; j < nbatch; ++j) { result(j, i) += beta_sq * (prod0(i, l, j) * kfn_il + (prod1(i, l, j) + prod2(i, l, j)) * kb_il); }
       }
     }
 
@@ -712,7 +708,7 @@ namespace cppdlr2d {
     // transpose(gc_sng) @ transpose(kfm) = (nbatch, r) @ (r, npts) -> (nbatch, npts)
     auto result_sng = matmul(transpose(gc_sng), transpose(kfm));
     for (int i = 0; i < npts; ++i) {
-      if (sng_mask(i)) {
+      if (mm(i) + n(i) + 1 == 0) {
         for (int j = 0; j < nbatch; ++j) { result(j, i) += beta_sq * result_sng(j, i); }
       }
     }
