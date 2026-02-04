@@ -35,7 +35,6 @@ void hubatom_test_driver(double beta, double u, double lambda, double eps, int n
   auto ifops_fer  = imfreq_ops(lambda, dlr_rf, Fermion);
   auto ifops_bos  = imfreq_ops(lambda, dlr_rf, Boson);
   auto dlr_if_fer = ifops_fer.get_ifnodes();
-  auto dlr_if_bos = ifops_bos.get_ifnodes();
 
   // Evaluate Green's function on 1D DLR grid and obtain its DLR coefficients
   std::complex<double> nu1 = 0, nu2 = 0;
