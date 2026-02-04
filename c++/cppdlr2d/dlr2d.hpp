@@ -302,6 +302,59 @@ namespace cppdlr2d {
                                       nda::vector_const_view<int> n, int channel);
 
   /*!
+ * \brief Evaluate multiple 2D DLR expansions at arbitrary fermionic/fermionic
+ * Matsubara frequency points
+ *
+ * This function evaluates multiple 2D DLR expansions at a shared set of
+ * Matsubara frequency points. The kernel matrices are built once and reused
+ * for all expansions, providing better efficiency than calling coefs2eval_if
+ * separately for each expansion.
+ *
+ * \param[in] beta    Inverse temperature
+ * \param[in] dlr_rf  1D DLR real frequencies
+ * \param[in] gc_reg  2D DLR regular expansion coefficients (3 x r x r x nbatch)
+ * \param[in] gc_sng  1D DLR singular expansion coefficients (r x nbatch)
+ * \param[in] m       Array of first indices of Matsubara frequency points (npts)
+ * \param[in] n       Array of second indices of Matsubara frequency points (npts)
+ * \param[in] channel Channel index (=1 for particle-particle, =2 for particle-hole)
+ *
+ * \return Array of complex values (nbatch x npts)
+ *
+ * \note Users with coefficient arrays of shape (N1, N2, ..., 3, r, r) should
+ * flatten to (3, r, r, nbatch) where nbatch = N1*N2*... before calling.
+ */
+  nda::array<dcomplex, 2> coefs2eval_if_many(double beta, nda::vector_const_view<double> dlr_rf, nda::array_const_view<dcomplex, 4> gc_reg,
+                                             nda::array_const_view<dcomplex, 2> gc_sng, nda::vector_const_view<int> m, nda::vector_const_view<int> n,
+                                             int channel);
+
+  /*!
+ * \brief Evaluate multiple 2D DLR expansions on a 2D Matsubara frequency grid
+ *
+ * This function evaluates multiple 2D DLR expansions on a rectangular grid
+ * of Matsubara frequency points. The grid spans m_min <= m <= m_max and
+ * n_min <= n <= n_max. The kernel matrices are built once and reused for
+ * all expansions.
+ *
+ * \param[in] beta    Inverse temperature
+ * \param[in] dlr_rf  1D DLR real frequencies
+ * \param[in] gc_reg  2D DLR regular expansion coefficients (3 x r x r x nbatch)
+ * \param[in] gc_sng  1D DLR singular expansion coefficients (r x nbatch)
+ * \param[in] m_min   Minimum first index of Matsubara frequency grid
+ * \param[in] m_max   Maximum first index of Matsubara frequency grid
+ * \param[in] n_min   Minimum second index of Matsubara frequency grid
+ * \param[in] n_max   Maximum second index of Matsubara frequency grid
+ * \param[in] channel Channel index (=1 for particle-particle, =2 for particle-hole)
+ *
+ * \return Array of complex values (nbatch x nm x nn) where nm = m_max - m_min + 1
+ *         and nn = n_max - n_min + 1
+ *
+ * \note Users with coefficient arrays of shape (N1, N2, ..., 3, r, r) should
+ * flatten to (3, r, r, nbatch) where nbatch = N1*N2*... before calling.
+ */
+  nda::array<dcomplex, 3> coefs2eval_if_grid(double beta, nda::vector_const_view<double> dlr_rf, nda::array_const_view<dcomplex, 4> gc_reg,
+                                             nda::array_const_view<dcomplex, 2> gc_sng, int m_min, int m_max, int n_min, int n_max, int channel);
+
+  /*!
  * \brief Evaluate a 2D DLR expansion at a given fermionic/fermionic Matsubara
  * frequency point, using three-term DLR
  *

@@ -71,11 +71,12 @@ void hubatom_test_driver(double beta, double u, double lambda, double eps, int n
   auto valsall                 = fmatrix(niom, 2);
   valsall(_, 0)                = chi_s;
   valsall(_, 1)                = lam_m;
+  // vals2coefs_many now outputs (3, r, r, nrhs) and (r, nrhs)
   auto [coefsall, coefsingall] = vals2coefs_many(r, cf2if, valsall, dlr2d_rf);
-  auto chi_s_c                 = coefsall(0, _, _, _);
-  auto lam_m_c                 = coefsall(1, _, _, _);
-  auto chi_s_csing             = coefsingall(0, _);
-  auto lam_m_csing             = coefsingall(1, _);
+  auto chi_s_c                 = coefsall(_, _, _, 0);
+  auto lam_m_c                 = coefsall(_, _, _, 1);
+  auto chi_s_csing             = coefsingall(_, 0);
+  auto lam_m_csing             = coefsingall(_, 1);
 
   end = std::chrono::high_resolution_clock::now();
   fmt::print("Time: {}\n\n", std::chrono::duration<double>(end - start).count());

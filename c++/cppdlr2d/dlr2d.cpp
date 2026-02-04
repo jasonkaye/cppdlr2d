@@ -445,15 +445,17 @@ namespace cppdlr2d {
     int rank = 0;                      // Rank (not needed)
     nda::lapack::gelss(cf2if, tmp, s, -1.0, rank);
 
-    auto coefreg = nda::zeros<dcomplex>(nrhs, 3, r, r);
-    auto coefsng = nda::zeros<dcomplex>(nrhs, r);
+    // Output shape (3, r, r, nrhs) for dimension merging optimization
+    auto coefreg = nda::zeros<dcomplex>(3, r, r, nrhs);
+    // Output shape (r, nrhs)
+    auto coefsng = nda::zeros<dcomplex>(r, nrhs);
 
     for (int j = 0; j < nrhs; ++j) {
       for (int i = 0; i < n; ++i) {
         if (dlr2d_rf(i, 0) < 3) { // Regular part
-          coefreg(j, dlr2d_rf(i, 0), dlr2d_rf(i, 1), dlr2d_rf(i, 2)) = tmp(i, j);
+          coefreg(dlr2d_rf(i, 0), dlr2d_rf(i, 1), dlr2d_rf(i, 2), j) = tmp(i, j);
         } else { // Singular part
-          coefsng(j, dlr2d_rf(i, 1)) = tmp(i, j);
+          coefsng(dlr2d_rf(i, 1), j) = tmp(i, j);
         }
       }
     }
@@ -626,6 +628,122 @@ namespace cppdlr2d {
     }
 
     return g;
+  }
+
+  // Evaluate multiple 2D DLR expansions at multiple points
+  // gc_reg has shape (3, r, r, nbatch), gc_sng has shape (r, nbatch)
+  // Channel = 1 for particle-particle, = 2 for particle-hole
+  nda::array<dcomplex, 2> coefs2eval_if_many(double beta, nda::vector_const_view<double> dlr_rf, nda::array_const_view<dcomplex, 4> gc_reg,
+                                             nda::array_const_view<dcomplex, 2> gc_sng, nda::vector_const_view<int> m, nda::vector_const_view<int> n,
+                                             int channel) {
+
+    auto r      = dlr_rf.size();   // # DLR basis functions
+    auto npts   = m.size();        // # points to evaluate
+    auto nbatch = gc_reg.shape(3); // batch is last dimension
+
+    // Validate input shapes
+    if (gc_reg.shape(0) != 3) throw std::runtime_error("First dim of coefficient array must be 3.");
+    if ((gc_reg.shape(1) != r) || (gc_reg.shape(2) != r))
+      throw std::runtime_error("Second and third dims of coefficient array must be # DLR basis functions r.");
+    if (gc_sng.shape(0) != r) throw std::runtime_error("First dim of gc_sng must be # DLR basis functions r.");
+    if (gc_sng.shape(1) != nbatch) throw std::runtime_error("Second dim of gc_sng must match batch size.");
+    if (n.size() != npts) throw std::runtime_error("m and n must have the same size.");
+
+    // Transform m indices for particle-hole channel
+    auto mm = nda::vector<int>(npts);
+    if (channel == 1) { // Particle-particle channel
+      mm = m;
+    } else if (channel == 2) { // Particle-hole channel
+      mm = -m - 1;
+    } else {
+      throw std::runtime_error("Invalid channel for coefs2eval_if_many.");
+    }
+
+    // Build kernel matrices
+    auto kfm = nda::array<dcomplex, 2>(npts, r);
+    auto kfn = nda::array<dcomplex, 2>(npts, r);
+    auto kb  = nda::array<dcomplex, 2>(npts, r);
+    for (int i = 0; i < npts; ++i) {
+      for (int k = 0; k < r; ++k) {
+        kfm(i, k) = k_if(mm(i), dlr_rf(k), Fermion);
+        kfn(i, k) = k_if(n(i), dlr_rf(k), Fermion);
+        kb(i, k)  = k_if_boson(mm(i) + n(i) + 1, dlr_rf(k));
+      }
+    }
+
+    // Precompute singular mask
+    auto sng_mask = nda::vector<bool>(npts);
+    for (int i = 0; i < npts; ++i) { sng_mask(i) = (mm(i) + n(i) + 1 == 0); }
+
+    // === DIMENSION MERGING OPTIMIZATION ===
+    // Extract term slices - each gc_reg(t, _, _, _) is contiguous (r, r, nbatch)
+    auto gc0 = gc_reg(0, _, _, _);
+    auto gc1 = gc_reg(1, _, _, _);
+    auto gc2 = gc_reg(2, _, _, _);
+
+    // Reshape to (r, r*nbatch) for matmul - this is a VIEW, no copy
+    auto gc0_flat = reshape(gc0, r, r * nbatch);
+    auto gc1_flat = reshape(gc1, r, r * nbatch);
+    auto gc2_flat = reshape(gc2, r, r * nbatch);
+
+    // 3 matmul calls total (not 3*nbatch)
+    auto prod0_flat = matmul(kfm, gc0_flat); // (npts, r*nbatch)
+    auto prod1_flat = matmul(kfn, gc1_flat);
+    auto prod2_flat = matmul(kfm, gc2_flat);
+
+    // Reshape results to (npts, r, nbatch)
+    auto prod0 = reshape(prod0_flat, npts, r, nbatch);
+    auto prod1 = reshape(prod1_flat, npts, r, nbatch);
+    auto prod2 = reshape(prod2_flat, npts, r, nbatch);
+
+    // Hadamard products and reduction
+    auto result    = nda::array<dcomplex, 2>(nbatch, npts);
+    double beta_sq = beta * beta;
+
+    for (int j = 0; j < nbatch; ++j) {
+      for (int i = 0; i < npts; ++i) {
+        dcomplex sum_val = 0;
+        for (int l = 0; l < r; ++l) { sum_val += prod0(i, l, j) * kfn(i, l) + (prod1(i, l, j) + prod2(i, l, j)) * kb(i, l); }
+        result(j, i) = beta_sq * sum_val;
+      }
+    }
+
+    // Singular contribution: gc_sng (r, nbatch), kfm (npts, r)
+    // transpose(gc_sng) @ transpose(kfm) = (nbatch, r) @ (r, npts) -> (nbatch, npts)
+    auto result_sng = matmul(transpose(gc_sng), transpose(kfm));
+    for (int i = 0; i < npts; ++i) {
+      if (sng_mask(i)) {
+        for (int j = 0; j < nbatch; ++j) { result(j, i) += beta_sq * result_sng(j, i); }
+      }
+    }
+
+    return result;
+  }
+
+  // Evaluate multiple 2D DLR expansions on a 2D frequency grid
+  // gc_reg has shape (3, r, r, nbatch), gc_sng has shape (r, nbatch)
+  // Channel = 1 for particle-particle, = 2 for particle-hole
+  nda::array<dcomplex, 3> coefs2eval_if_grid(double beta, nda::vector_const_view<double> dlr_rf, nda::array_const_view<dcomplex, 4> gc_reg,
+                                             nda::array_const_view<dcomplex, 2> gc_sng, int m_min, int m_max, int n_min, int n_max, int channel) {
+
+    auto nm     = m_max - m_min + 1;
+    auto nn     = n_max - n_min + 1;
+    auto npts   = nm * nn;
+    auto nbatch = gc_reg.shape(3); // batch is last dimension
+
+    // Build flattened m and n vectors from grid ranges
+    auto m_vec = nda::vector<int>(npts);
+    auto n_vec = nda::vector<int>(npts);
+    for (int im = 0; im < nm; ++im) {
+      for (int in = 0; in < nn; ++in) {
+        m_vec(im * nn + in) = m_min + im;
+        n_vec(im * nn + in) = n_min + in;
+      }
+    }
+
+    // Call coefs2eval_if_many and reshape from (nbatch, nm*nn) to (nbatch, nm, nn)
+    auto result_flat = coefs2eval_if_many(beta, dlr_rf, gc_reg, gc_sng, m_vec, n_vec, channel);
+    return nda::array<dcomplex, 3>(reshape(result_flat, nbatch, nm, nn));
   }
 
   // Evaluate 2D DLR expansion with two terms
