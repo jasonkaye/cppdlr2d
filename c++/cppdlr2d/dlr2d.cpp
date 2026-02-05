@@ -615,16 +615,15 @@ namespace cppdlr2d {
     }
 
     // Evaluate DLR expansion at all points
-    auto tmp1 = hadamard(matmul(kfm, gc_reg(0, _, _)), kfn);
-    auto tmp2 = hadamard(matmul(kfn, gc_reg(1, _, _)), kb);
-    auto tmp3 = hadamard(matmul(kfm, gc_reg(2, _, _)), kb);
+    double betasq = beta * beta;
+    auto g        = make_regular(
+       betasq
+       * sum(hadamard(matmul(kfm, gc_reg(0, _, _)), kfn) + hadamard(matmul(kfn, gc_reg(1, _, _)), kb) + hadamard(matmul(kfm, gc_reg(2, _, _)), kb),
+                    1));
 
-    auto g = nda::vector<dcomplex>(npts);
+    // Add singular contribution if mm + n + 1 == 0
     for (int i = 0; i < npts; ++i) {
-      g(i) = (beta * beta) * sum(tmp1(i, _) + tmp2(i, _) + tmp3(i, _));
-
-      // Add singular contribution if mm + n + 1 == 0
-      if (mm(i) + n(i) + 1 == 0) { g(i) += (beta * beta) * nda::blas::dot(gc_sng, kfm(i, _)); }
+      if (mm(i) + n(i) + 1 == 0) { g(i) += betasq * nda::blas::dot(gc_sng, kfm(i, _)); }
     }
 
     return g;
