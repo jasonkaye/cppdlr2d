@@ -29,3 +29,14 @@ external_dependency(cppdlr
   GIT_TAG main
   EXCLUDE_FROM_ALL
 )
+
+# -- google-bench --
+if(NOT IS_SUBPROJECT AND Build_Benchs AND NOT ASAN AND NOT UBSAN)
+  set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "")
+  external_dependency(google-bench
+    GIT_REPO https://github.com/google/benchmark
+    GIT_TAG main
+    BUILD_ALWAYS
+    EXCLUDE_FROM_ALL
+  )
+endif()

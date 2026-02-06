@@ -69,6 +69,9 @@ endif()
 # Programs
 option(Build_Programs "Build example programs" ON)
 
+# Benchmarks
+option(Build_Benchs "Build benchmarks" OFF)
+
 # ############
 # Global Compilation Settings
 
@@ -144,6 +147,11 @@ endif()
 # Programs
 if(Build_Programs)
   add_subdirectory(programs)
+endif()
+
+# Benchmarks
+if(NOT IS_SUBPROJECT AND Build_Benchs AND NOT ASAN AND NOT UBSAN)
+  add_subdirectory(benchmarks)
 endif()
 
 # Additional configuration files
