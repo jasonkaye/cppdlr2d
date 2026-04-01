@@ -1,7 +1,6 @@
 #include "dlr2d.hpp"
 #include "utils.hpp"
 #include <chrono>
-#include <fmt/format.h>
 #include <numbers>
 
 namespace cppdlr2d {
@@ -155,10 +154,6 @@ namespace cppdlr2d {
       dlr2d_if(m, 1) = prod_if(if_idx(m), 1);
     }
 
-    fmt::print("Fine system matrix shape = {} x {}\n", 3 * r * r + r, 3 * r * r + r);
-    fmt::print("System matrix rank = {}\n", r2d);
-    fmt::print("DLR rank squared = {}\n", r * r);
-
     return {dlr2d_if, dlr2d_rf};
   }
 
@@ -181,10 +176,6 @@ namespace cppdlr2d {
     // Get DLR frequencies
     auto dlr_rf = build_dlr_rf(lambda, eps);
     int r       = dlr_rf.size(); // # DLR basis functions
-
-    fmt::print("\nDLR cutoff Lambda = {}\n", lambda);
-    fmt::print("DLR tolerance epsilon = {}\n", eps);
-    fmt::print("# DLR basis functions = {}\n", r);
 
     // Get fermionic and bosonic DLR grids
     auto ifops_fer  = imfreq_ops(lambda, dlr_rf, Fermion);
@@ -249,8 +240,6 @@ namespace cppdlr2d {
       }
     }
 
-    fmt::print("Fine system matrix shape = {} x {}\n", kmat.shape(0), kmat.shape(1));
-
     // Pivoted QR to determine sampling nodes
     auto kmatt = fmatrix(transpose(kmat));
     auto piv   = nda::zeros<int>(2 * r * r);
@@ -284,9 +273,6 @@ namespace cppdlr2d {
       dlr2d_if(k, 0) = nu2didx(piv(k) - 1, 0);
       dlr2d_if(k, 1) = nu2didx(piv(k) - 1, 1);
     }
-
-    fmt::print("DLR rank squared = {}\n", r * r);
-    fmt::print("System matrix rank = {}\n\n", niom_skel);
 
     return dlr2d_if;
   }
